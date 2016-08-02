@@ -42,7 +42,8 @@ public class A_Star implements IPath{
          int xe = route.End().Get_X();
          int ye = route.End().Get_Y();
 
-         for (int i = 0; i < map.Get_Fields()[0].length-1; i++)
+         // Ausgabe
+         for (int i = 0; i < map.Get_Fields()[0].length; i++)
          {
              for (int j = 0; j < map.Get_Fields().length; j++)
              {
@@ -56,10 +57,10 @@ public class A_Star implements IPath{
                      {
                     	 System.out.print("2");
                      }
+                     else
                      {
-                         System.out.print(" ");
+                         System.out.print("F");
                      }
-
                  }
                  else if (map.Get_Fields()[j][i].Get_State() == Fieldstate.occupied)
                  {
@@ -76,13 +77,47 @@ public class A_Star implements IPath{
                     	 System.out.print("X");
                      }
                  }
+                 else if (map.Get_Fields()[j][i].Get_State() == Fieldstate.freeScanned)
+                 {
+                     if ((i == xStart && j == yStart))
+                     {
+                    	 System.out.print("5");
+                     }
+                     else if ((i == xe && j == ye))
+                     {
+                    	 System.out.print("6");
+                     }
+                     else
+                     {
+                    	 System.out.print("S");
+                     }
+                 }
+                 else if (map.Get_Fields()[j][i].Get_State() == Fieldstate.unscanned)
+                 {
+                     if ((i == xStart && j == yStart))
+                     {
+                    	 System.out.print("7");
+                     }
+                     else if ((i == xe && j == ye))
+                     {
+                    	 System.out.print("8");
+                     }
+                     else
+                     {
+                    	 System.out.print("U");
+                     }
+                 }
              }
 
              System.out.println();
          }
 
+         System.out.println();
+         
+         // Start auf 0 setzen
          map.Get_Fields()[xStart][yStart].DistanceStep = 0;
 
+         // alle auf dieschrittweite setzen
          while (true)
          {
              boolean progress = false;
@@ -188,7 +223,7 @@ public class A_Star implements IPath{
 
      private boolean FieldIsFree(int x, int y, Map map)
      {
-         if (map.Get_Fields()[x][y].Get_State() == Fieldstate.free)
+         if (map.Get_Fields()[x][y].Get_State() != Fieldstate.occupied)
          {
              return true;
          }
