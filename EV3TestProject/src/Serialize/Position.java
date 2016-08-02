@@ -2,6 +2,12 @@ package Serialize;
 
 public class Position {
 
+	public Position()
+	{
+		this.X = 0;
+		this.Y = 0;
+	}
+	
 	public Position(int xIn, int yIn)
 	{
 		this.X = xIn;

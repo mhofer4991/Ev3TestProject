@@ -20,4 +20,14 @@ public class Route {
 	{
 		this.Points = route;
 	}
+	
+	public Position Start()
+	{
+		return this.Points.get(0);
+	}
+	
+	public Position End()
+	{
+		return this.Points.get(this.Points.size());
+	}
 }

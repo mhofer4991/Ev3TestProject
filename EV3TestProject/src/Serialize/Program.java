@@ -1,7 +1,6 @@
 package Serialize;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -29,7 +28,6 @@ public class Program {
 			jsonString = new String(encoded, StandardCharsets.UTF_8);
 			System.out.println(jsonString);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}				
 		
@@ -48,8 +46,7 @@ public class Program {
 			PrintWriter writer = new PrintWriter("Json.txt");
 			writer.println(text);
 			writer.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+		} catch (FileNotFoundException e) {		
 			e.printStackTrace();
 		}					
 	}

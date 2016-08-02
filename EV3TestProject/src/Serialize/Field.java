@@ -11,6 +11,9 @@ public class Field {
     private Fieldstate State;
 
     private Position Position;
+    
+    public boolean IsPath;
+    public int DistanceStep;
 	
     public Fieldstate Get_State()
     {
