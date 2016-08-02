@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import calibrating.CalibratingUtil;
 import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
@@ -90,7 +91,16 @@ public class Program {
 		us.getDistanceMode().fetchSample(testdata, 0);
 		LCD.drawString(Float.toString(testdata[0]), 0, 0);*/
 		
-		//Driving drive = new Driving(new EV3LargeRegulatedMotor(MotorPort.C, MotorPort.D));
+		Driving drive = new Driving(new EV3LargeRegulatedMotor(MotorPort.C), new EV3LargeRegulatedMotor(MotorPort.D));
+		
+		CalibratingUtil caliu = new CalibratingUtil(drive);
+		//LCD.drawString(Float.toString(caliu.GetDeviceDegreesByMotorDegrees(1000)), 0, 0);
+		//drive.DriveForward(1000);
+		//LCD.drawString(Float.toString(caliu.GetDeviceDistanceByMotorDegrees(1000)), 0, 0);
+		//drive.DriveDistanceForward(0.5F, false);
+		drive.TurnRightByDegrees(90, false);
+		
+		Delay.msDelay(2000);
 	}
 
 }
