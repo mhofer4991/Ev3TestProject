@@ -15,6 +15,7 @@ import lejos.hardware.port.Port;
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3GyroSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
+import lejos.hardware.sensor.HiTechnicAccelerometer;
 import lejos.robotics.RegulatedMotor;
 import lejos.utility.Delay;
 import network.RemoteControlServer;
@@ -102,8 +103,25 @@ public class Program {
 		//drive.DriveDistanceForward(0.5F, false);
 		//drive.TurnRightByDegrees(90, false);
 		
-		RemoteControlServer ser = new RemoteControlServer();
-		ser.start();
+		//RemoteControlServer ser = new RemoteControlServer();
+		//ser.start();
+		
+		drive.DriveDistanceForward(1, true);
+		HiTechnicAccelerometer ac = new HiTechnicAccelerometer(SensorPort.S1);
+		for (int i = 0; i < 20; i++)
+		{
+			float[] data = new float[3];
+			ac.getAccelerationMode().fetchSample(data, 0);
+			//LCD.drawString(Float.toString(data[0]), 0, 0);
+			//LCD.drawString(Float.toString(data[1]), 0, 1);
+			//LCD.drawString(Float.toString(data[2]), 0, 2);
+			//System.out.println(Float.toString(data[1]));
+			float len = (float)Math.sqrt(data[0] * data[0] + data[1] * data[1] + data[2] * data[2]);
+			System.out.println(len);
+			
+			Delay.msDelay(500);
+		}
+		
 		
 		Delay.msDelay(2000);
 	}

@@ -21,22 +21,20 @@ import lejos.utility.Delay;
 public class RemoteControlServer extends Thread {
 	public final static int PORT = 4001;
 	
-	private List<RemoteControlListener> listeners;
+	private RemoteControlListener listener;
 	
 	private boolean running;
 	
 	private Socket clientSocket;
 	
 	public RemoteControlServer()
-	{
-		this.listeners = new ArrayList<RemoteControlListener>();
-		
+	{		
 		this.running = true;
 	}
 	
-	public void AddListener(RemoteControlListener listener)
+	public void SetListener(RemoteControlListener listener)
 	{
-		this.listeners.add(listener);
+		this.listener = listener;
 	}
 	
 	public void Stop()
@@ -57,6 +55,8 @@ public class RemoteControlServer extends Thread {
                 
                 try {
                     clientSocket = serverSocket.accept();
+                    
+                    listener.ConnectedToRemote();
 
                     RoboStatus s = new RoboStatus();
                     s.X = 20;
@@ -67,6 +67,7 @@ public class RemoteControlServer extends Thread {
                     
                     this.HandleClient(clientSocket);
                 } catch (IOException e) {
+                	listener.DisconnectedFromRemote();
                 }
             }       
             
