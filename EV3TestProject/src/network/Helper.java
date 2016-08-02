@@ -9,4 +9,11 @@ public class Helper {
 		
 		return g.toJson(o);
 	}
+	
+	public static <T> T GetObjectFromString(String s, Class<T> c)
+	{
+		Gson g = new Gson();
+		
+		return g.fromJson(s, c);
+	}
 }
