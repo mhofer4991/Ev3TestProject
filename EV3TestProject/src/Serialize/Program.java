@@ -34,13 +34,12 @@ public class Program {
 		}				
 		
 		// Deserializing
-		Field m = g.fromJson(jsonString, Field.class);
+		RoboStatus m = g.fromJson(jsonString, RoboStatus.class);
 					
 		System.out.println(m.toString());
-		System.out.println(m.Get_State());
-		System.out.println(m.Get_Position());
-		System.out.println(m.Get_Position().Get_X());
-		System.out.println(m.Get_Position().Get_Y());
+		System.out.println(m.X);
+		System.out.println(m.Y);
+		System.out.println(m.Rotation);
 		
 		String text = g.toJson(pos);
 		
