@@ -14,5 +14,15 @@ public class Program {
 		Gson g = new Gson();
 	
 		System.out.println(g.toJson(pos));
+		
+		Field m = g.fromJson(jsonString, Field.class);
+					
+		System.out.println(m.toString());
+		System.out.println(m.Get_State());
+		System.out.println(m.Get_Position());
+		System.out.println(m.Get_Position().Get_X());
+		System.out.println(m.Get_Position().Get_Y());	
 	}
+	
+	private static String jsonString = "{ \"State\":1, \"Position\":{\"x\":21,\"y\":6} }";
 }
