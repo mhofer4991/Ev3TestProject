@@ -1,5 +1,11 @@
 package Serialize;
 
+/**
+ * 
+ * @author Markus
+ * Determines the position of a field in a two dimensional array (map).
+ * Please do not use it to determine the position of the robot.
+ */
 public class Position {
 
 	public Position()
