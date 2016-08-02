@@ -4,30 +4,30 @@ public class Position {
 
 	public Position(int xIn, int yIn)
 	{
-		this.x = xIn;
-		this.y = yIn;
+		this.X = xIn;
+		this.Y = yIn;
 	}
 	
-	private int x;
-	private int y;
+	private int X;
+	private int Y;
 	
 	public int Get_X()
 	{
-		return this.x;
+		return this.X;
 	}
 	
 	public int Get_Y()
 	{
-		return this.y;
+		return this.Y;
 	}
 	
 	public void Set_X(int xNew)
 	{
-		this.x = xNew;
+		this.X = xNew;
 	}
 	
 	public void Set_Y(int yNew)
 	{
-		this.y = yNew;
+		this.Y = yNew;
 	}
 }
