@@ -46,6 +46,25 @@ public class Program {
         myPaths = PathIO.GetPath(map, routes, path);
 
         Draw(myPaths);
+        
+        System.out.println();
+        
+        ArrayList<Position> completeRoute = new ArrayList<Position>();
+        completeRoute.add(myPaths.get(0).get(0));
+        
+        for (int i = 0; i < myPaths.size(); i++)
+        {
+        	for (int j = 1; j < myPaths.get(i).size(); j++)
+			{
+				completeRoute.add(myPaths.get(i).get(j));
+        	}
+        }              
+        
+        for (int i = 0; i < completeRoute.size(); i++)
+        {
+            System.out.print(completeRoute.get(i).Get_X() + "/" + completeRoute.get(i).Get_Y() + "  ->  ");
+        }
+       
 	}	
 	
     public static void Draw(ArrayList<ArrayList<Position>> paths)
