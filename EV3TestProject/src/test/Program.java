@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.rmi.server.RemoteServer;
 
 import calibrating.CalibratingUtil;
 import lejos.hardware.lcd.LCD;
@@ -16,6 +17,7 @@ import lejos.hardware.sensor.EV3GyroSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.robotics.RegulatedMotor;
 import lejos.utility.Delay;
+import network.RemoteControlServer;
 import robot.Driving;
 
 public class Program {
@@ -98,7 +100,10 @@ public class Program {
 		//drive.DriveForward(1000);
 		//LCD.drawString(Float.toString(caliu.GetDeviceDistanceByMotorDegrees(1000)), 0, 0);
 		//drive.DriveDistanceForward(0.5F, false);
-		drive.TurnRightByDegrees(90, false);
+		//drive.TurnRightByDegrees(90, false);
+		
+		RemoteControlServer ser = new RemoteControlServer();
+		ser.start();
 		
 		Delay.msDelay(2000);
 	}

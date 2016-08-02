@@ -88,7 +88,35 @@ public class Robot implements Controllable, RegulatedMotorListener {
 	}
 
 	@Override
-	public void CancelDriving() {
+	public void DriveForward() {
+		this.currentMovement = MovementMode.Drive;
+		
+		this.driving.DriveForward();
+	}
+
+	@Override
+	public void DriveBackward() {
+		this.currentMovement = MovementMode.Drive;
+		
+		this.driving.DriveBackward();
+	}
+
+	@Override
+	public void TurnRight() {
+		this.currentMovement = MovementMode.Rotate;
+		
+		this.driving.TurnRight();
+	}
+
+	@Override
+	public void TurnLeft() {
+		this.currentMovement = MovementMode.Rotate;
+		
+		this.driving.TurnLeft();
+	}
+
+	@Override
+	public void Stop() {
 		this.driving.Stop();
 	}
 	
@@ -98,29 +126,35 @@ public class Robot implements Controllable, RegulatedMotorListener {
 
 	@Override
 	public void rotationStarted(RegulatedMotor motor, int tachoCount, boolean stalled, long timeStamp) {
-		if (this.currentMovement == MovementMode.Drive)
+		if (this.currentMovement == MovementMode.Drive || this.currentMovement == MovementMode.Rotate)
 		{
-			lastTachoCount = tachoCount;
+			if (this.currentMovement == MovementMode.Drive)
+			{
+				lastTachoCount = tachoCount;
+			}
 		}
 	}
 
 	@Override
 	public void rotationStopped(RegulatedMotor motor, int tachoCount, boolean stalled, long timeStamp) {
-		if (this.currentMovement == MovementMode.Drive)
+		if (this.currentMovement == MovementMode.Drive || this.currentMovement == MovementMode.Rotate)
 		{
-			int delta = tachoCount - lastTachoCount;
-			float distance = CalibratingUtil.ConvertMotorDegreesToDeviceDistance(delta);
-			Point newPosition = this.position;
-			float[] gyroData = new float[1];
-			
-			gyro.getAngleMode().fetchSample(gyroData, 0);
-			
-			float g = (float)Math.sin(Math.toRadians(gyroData[0])) * distance;
-			float a = (float)Math.cos(Math.toRadians(gyroData[0])) * distance;
-			
-			this.position = new Point(
-					newPosition.x + g, 
-					newPosition.y + a);
+			if (this.currentMovement == MovementMode.Drive)
+			{
+				int delta = tachoCount - lastTachoCount;
+				float distance = CalibratingUtil.ConvertMotorDegreesToDeviceDistance(delta);
+				Point newPosition = this.position;
+				float[] gyroData = new float[1];
+				
+				gyro.getAngleMode().fetchSample(gyroData, 0);
+				
+				float g = (float)Math.sin(Math.toRadians(gyroData[0])) * distance;
+				float a = (float)Math.cos(Math.toRadians(gyroData[0])) * distance;
+				
+				this.position = new Point(
+						newPosition.x + g, 
+						newPosition.y + a);
+			}
 		}
 	}
 }
