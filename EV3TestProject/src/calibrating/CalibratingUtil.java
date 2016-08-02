@@ -63,10 +63,26 @@ public class CalibratingUtil {
 		return ret;
 	}
 	
+	public static float ConvertMotorDegreesToDeviceDegrees(int motorDegrees)
+	{
+		CalibratingData data = CalibratingData.LoadPersistent();
+		float ret = ((float)motorDegrees / (float)data.motorDegrees) * data.deviceDegrees;
+		
+		return ret;
+	}
+	
 	public static int ConvertDeviceDistanceToMotorDegrees(float deviceDistance)
 	{
 		CalibratingData data = CalibratingData.LoadPersistent();
 		int ret = (int)((deviceDistance / data.deviceDistance) * data.motorDegrees);
+		
+		return ret;
+	}
+	
+	public static float ConvertMotorDegreesToDeviceDistance(int motorDegrees)
+	{
+		CalibratingData data = CalibratingData.LoadPersistent();
+		float ret = ((float)motorDegrees / (float)data.motorDegrees) * data.deviceDistance;
 		
 		return ret;
 	}
