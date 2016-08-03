@@ -19,7 +19,7 @@ public class Program {
         {
         	for (int j = 0; j < 100; j++)
         	{
-        		fields[i][j] = new Field(i,j);
+        		fields[i][j] = new Field(10-i,20-j);
         	}
         }              
         
@@ -31,11 +31,11 @@ public class Program {
         
         map.Set_Fields(fields);
         
-        Route route1 = new Route(new Position(2, 2), new Position(5, 5));
+        Route route1 = new Route(new Position(-2, 2), new Position(5, 5));
         Route route2 = new Route(new Position(5, 5), new Position(5, 0));
         Route route3 = new Route(new Position(5, 0), new Position(0, 9));
         Route route4 = new Route(new Position(0, 9), new Position(4, 4));
-        Route route5 = new Route(new Position(4, 4), new Position(0, 99));
+        Route route5 = new Route(new Position(4, 4), new Position(0, 79));
 
         routes.add(route1);
         routes.add(route2);

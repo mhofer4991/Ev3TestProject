@@ -19,7 +19,7 @@ public class A_Star implements IPath{
 
      private ArrayList<Position> Path;
    
-     private void ResetFieldValues(Map map)
+     private static void ResetFieldValues(Map map)
      {
          for (Field fieldarr[] : map.Get_Fields())
          {
@@ -37,12 +37,13 @@ public class A_Star implements IPath{
          ResetFieldValues(map);
                      
          int xStart = route.Start().Get_X();
-         int yStart = route.Start().Get_Y();
-
+         int yStart = route.Start().Get_Y();        
+         
+         /*
          int xe = route.End().Get_X();
          int ye = route.End().Get_Y();
 
-         /*
+         
          // Ausgabe
          for (int i = 0; i < map.Get_Fields()[0].length; i++)
          {
@@ -115,6 +116,7 @@ public class A_Star implements IPath{
 
          System.out.println();
          */
+         
          // Start auf 0 setzen
          map.Get_Fields()[xStart][yStart].DistanceStep = 0;
 
