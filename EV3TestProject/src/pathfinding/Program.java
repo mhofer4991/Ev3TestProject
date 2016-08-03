@@ -2,6 +2,7 @@ package pathfinding;
 
 import java.util.ArrayList;
 import Serialize.*;
+import lejos.utility.Delay;
 
 public class Program {
 
@@ -12,11 +13,11 @@ public class Program {
 
         Map map = new Map();
         
-        Field[][] fields = new Field[6][6];
+        Field[][] fields = new Field[100][100];
         
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 100; i++)
         {
-        	for (int j = 0; j < 6; j++)
+        	for (int j = 0; j < 100; j++)
         	{
         		fields[i][j] = new Field(i,j);
         	}
@@ -32,9 +33,9 @@ public class Program {
         
         Route route1 = new Route(new Position(2, 2), new Position(5, 5));
         Route route2 = new Route(new Position(5, 5), new Position(5, 0));
-        Route route3 = new Route(new Position(5, 0), new Position(0, 4));
-        Route route4 = new Route(new Position(0, 4), new Position(4, 4));
-        Route route5 = new Route(new Position(4, 4), new Position(0, 0));
+        Route route3 = new Route(new Position(5, 0), new Position(0, 9));
+        Route route4 = new Route(new Position(0, 9), new Position(4, 4));
+        Route route5 = new Route(new Position(4, 4), new Position(0, 99));
 
         routes.add(route1);
         routes.add(route2);
@@ -65,6 +66,8 @@ public class Program {
             System.out.print(completeRoute.get(i).Get_X() + "/" + completeRoute.get(i).Get_Y() + "  ->  ");
         }
        
+        
+        Delay.msDelay(5000);
 	}	
 	
     public static void Draw(ArrayList<ArrayList<Position>> paths)

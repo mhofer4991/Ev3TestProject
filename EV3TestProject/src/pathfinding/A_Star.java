@@ -42,6 +42,7 @@ public class A_Star implements IPath{
          int xe = route.End().Get_X();
          int ye = route.End().Get_Y();
 
+         /*
          // Ausgabe
          for (int i = 0; i < map.Get_Fields()[0].length; i++)
          {
@@ -113,11 +114,11 @@ public class A_Star implements IPath{
          }
 
          System.out.println();
-         
+         */
          // Start auf 0 setzen
          map.Get_Fields()[xStart][yStart].DistanceStep = 0;
 
-         // alle auf dieschrittweite setzen
+         // alle auf die schrittweite setzen
          while (true)
          {
              boolean progress = false;
