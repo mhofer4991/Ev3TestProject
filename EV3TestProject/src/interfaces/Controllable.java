@@ -8,7 +8,7 @@ package interfaces;
 public interface Controllable {
 	void DriveDistanceForward(float distance);
 	void DriveDistanceBackward(float distance);
-	void TurnLuftByDegrees(float degrees);
+	void TurnLeftByDegrees(float degrees);
 	void TurnRightByDegrees(float degrees);
 
 	void DriveForward();

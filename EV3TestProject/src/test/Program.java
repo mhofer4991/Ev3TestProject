@@ -20,6 +20,7 @@ import lejos.robotics.RegulatedMotor;
 import lejos.utility.Delay;
 import network.RemoteControlServer;
 import robot.Driving;
+import robot.Robot;
 
 public class Program {
 
@@ -94,21 +95,38 @@ public class Program {
 		us.getDistanceMode().fetchSample(testdata, 0);
 		LCD.drawString(Float.toString(testdata[0]), 0, 0);*/
 		
-		Driving drive = new Driving(new EV3LargeRegulatedMotor(MotorPort.C), new EV3LargeRegulatedMotor(MotorPort.D));
+		//Driving drive = new Driving(new EV3LargeRegulatedMotor(MotorPort.C), new EV3LargeRegulatedMotor(MotorPort.D));
 		
-		CalibratingUtil caliu = new CalibratingUtil(drive);
+		//CalibratingUtil caliu = new CalibratingUtil(drive);
 		//LCD.drawString(Float.toString(caliu.GetDeviceDegreesByMotorDegrees(1000)), 0, 0);
 		//drive.DriveForward(1000);
 		//LCD.drawString(Float.toString(caliu.GetDeviceDistanceByMotorDegrees(1000)), 0, 0);
-		//drive.DriveDistanceForward(0.5F, false);
+		//drive.DriveDistanceForward(1, false);
 		//drive.TurnRightByDegrees(90, false);
 		
 		//RemoteControlServer ser = new RemoteControlServer();
 		//ser.start();
 		
-		drive.DriveDistanceForward(1, true);
+		Robot ro = new Robot();
+		CalibratingUtil caliu = new CalibratingUtil(ro.GetDriving());
+		
+		ro.DriveDistanceForward(1);
+		/*drive.DriveDistanceForward(1, true);
 		HiTechnicAccelerometer ac = new HiTechnicAccelerometer(SensorPort.S1);
-		for (int i = 0; i < 20; i++)
+		
+		float ma;
+		float mac;
+		float mal;
+		
+		ma = 0.0F;
+		mac = 9.81F;
+		mal = 9.81F;
+		
+		float[] analysis = new float[20];
+		int index = 0;
+		boolean filled = false;
+		
+		for (int i = 0; i < 200; i++)
 		{
 			float[] data = new float[3];
 			ac.getAccelerationMode().fetchSample(data, 0);
@@ -116,11 +134,49 @@ public class Program {
 			//LCD.drawString(Float.toString(data[1]), 0, 1);
 			//LCD.drawString(Float.toString(data[2]), 0, 2);
 			//System.out.println(Float.toString(data[1]));
-			float len = (float)Math.sqrt(data[0] * data[0] + data[1] * data[1] + data[2] * data[2]);
-			System.out.println(len);
+			float len = (float)Math.sqrt(data[0] * data[0] + data[1] * data[1]); // + data[2] * data[2]);
+
+			ma = len * len * len * len;
+			analysis[index] = ma;
+			index++;
 			
-			Delay.msDelay(500);
-		}
+			if (index >= 20)
+			{
+				index = 0;
+				filled = true;
+			}
+			
+			if (filled)
+			{
+				float min = analysis[0];
+				float max = analysis[0];
+				float val = 0;
+				
+				for (int j = 0; j < 20; j++)
+				{
+					if (analysis[j] > max)
+					{
+						//maxavg += analysis[j];
+						max = analysis[j];
+					}
+					else if (analysis[j] < min)
+					{
+						min = analysis[j];
+					}
+				}
+				
+				val = min / max;
+				
+				//minavg /= min;
+				//maxavg /= (10 - min);
+				
+				System.out.println(max);
+				
+				filled = false;
+			}
+			
+			Delay.msDelay(50);
+		}*/
 		
 		
 		Delay.msDelay(2000);
