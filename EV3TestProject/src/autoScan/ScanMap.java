@@ -13,9 +13,13 @@ public class ScanMap {
 	
 	public void AddScanResult(float direction, float freeDistance, Position startPosition)
 	{
+		// TODO: Berechnen der benötigten Zellen in X und Y Richtung
+		// Für jede Zelle, die Aussenkanten als Gerade und prüfen ob sie sich mit der start ziel geraden schneiden
+		
+		
 		// TODO: Checken ob Array zu klein
 		
-		// TODO: Array entsprechend vergrößern
+		// TODO: gegebenfalls Array entsprechend vergrößern
 		
 		// TODO: Alle gescannten Zellen auf free setzen
 		
