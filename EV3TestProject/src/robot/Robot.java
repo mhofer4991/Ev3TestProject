@@ -1,6 +1,7 @@
 package robot;
 
 import calibrating.CalibratingUtil;
+import interfaces.CollisionListener;
 import interfaces.Controllable;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
@@ -9,12 +10,14 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3GyroSensor;
 import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
+import lejos.hardware.sensor.HiTechnicAccelerometer;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.RegulatedMotorListener;
 import lejos.robotics.geometry.Point;
 
-public class Robot implements Controllable, RegulatedMotorListener {
+public class Robot implements Controllable, RegulatedMotorListener, CollisionListener {
 	private EV3TouchSensor touch;
+	private HiTechnicAccelerometer acc;
 	private EV3UltrasonicSensor ultra;
 	private EV3ColorSensor color;
 	private EV3GyroSensor gyro;
@@ -27,10 +30,16 @@ public class Robot implements Controllable, RegulatedMotorListener {
 	private MovementMode currentMovement;
 	
 	private int lastTachoCount;
+	
+	private float lastRotation;
+	
+	// collision detection
+	private CollisionThread collisionThread;
 		
 	public Robot()
 	{
 		this.touch = new EV3TouchSensor(SensorPort.S1);
+		//this.acc = new HiTechnicAccelerometer(SensorPort.S1);
 		this.ultra = new EV3UltrasonicSensor(SensorPort.S2);
 		this.color = new EV3ColorSensor(SensorPort.S3);
 		this.gyro = new EV3GyroSensor(SensorPort.S4);
@@ -43,6 +52,11 @@ public class Robot implements Controllable, RegulatedMotorListener {
 		left.addListener(this);
 		
 		this.driving = new Driving(left, right);
+		
+		this.collisionThread = new CollisionThread(gyro, ultra, touch);
+		this.collisionThread.SetListener(this);
+		
+		this.collisionThread.start();
 	}
 	
 	public Point GetPosition()
@@ -74,7 +88,7 @@ public class Robot implements Controllable, RegulatedMotorListener {
 	}
 
 	@Override
-	public void TurnLuftByDegrees(float degrees) {
+	public void TurnLeftByDegrees(float degrees) {
 		this.currentMovement = MovementMode.Rotate;
 		
 		this.driving.TurnLeftByDegrees(degrees, false);
@@ -130,7 +144,14 @@ public class Robot implements Controllable, RegulatedMotorListener {
 		{
 			if (this.currentMovement == MovementMode.Drive)
 			{
+				this.collisionThread.WatchForObstacles(true);
+				
 				lastTachoCount = tachoCount;
+				
+				float[] data = new float[1];
+				
+				gyro.getAngleMode().fetchSample(data, 0);
+				lastRotation = data[0];
 			}
 		}
 	}
@@ -140,7 +161,9 @@ public class Robot implements Controllable, RegulatedMotorListener {
 		if (this.currentMovement == MovementMode.Drive || this.currentMovement == MovementMode.Rotate)
 		{
 			if (this.currentMovement == MovementMode.Drive)
-			{
+			{				
+				this.collisionThread.WatchForObstacles(false);
+				
 				int delta = tachoCount - lastTachoCount;
 				float distance = CalibratingUtil.ConvertMotorDegreesToDeviceDistance(delta);
 				Point newPosition = this.position;
@@ -155,6 +178,66 @@ public class Robot implements Controllable, RegulatedMotorListener {
 						newPosition.x + g, 
 						newPosition.y + a);
 			}
+		}
+	}
+	
+	//
+	// Collision listener
+	//
+	
+	@Override
+	public void ObstacleDetected(float remainingDistance) {
+		if (this.currentMovement == MovementMode.Drive)
+		{
+			int delta = Math.abs(driving.GetLeft().getTachoCount() - lastTachoCount);
+			float distance = CalibratingUtil.ConvertMotorDegreesToDeviceDistance(delta);
+			
+			if (distance < remainingDistance)
+			{
+				// Just drive along
+			}
+			else
+			{
+				this.Stop();
+			}
+		}
+	}
+
+	@Override
+	public void UnexpectedRotationDetected() {
+		if (this.currentMovement == MovementMode.Drive)
+		{
+			this.Stop();
+			
+			// rotate back
+			float[] data = new float[1];
+			
+			this.DriveDistanceBackward(0.15F);
+			
+			gyro.getAngleMode().fetchSample(data, 0);	
+			
+			float diff = data[0] - lastRotation;
+			
+			if (data[0] < 0)
+			{
+				this.TurnRightByDegrees(diff);
+			}
+			else
+			{
+				this.TurnLeftByDegrees(diff);
+			}
+			
+			//System.out.println("unexpected rotation detected!");
+		}
+	}
+
+	@Override
+	public void BumpedIntoObstacle() {
+		if (this.currentMovement == MovementMode.Drive)
+		{
+			this.Stop();
+			
+			this.DriveDistanceBackward(0.15F);
 		}
 	}
 }
