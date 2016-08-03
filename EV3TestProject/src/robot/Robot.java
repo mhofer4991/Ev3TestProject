@@ -3,6 +3,7 @@ package robot;
 import calibrating.CalibratingUtil;
 import interfaces.CollisionListener;
 import interfaces.Controllable;
+import interfaces.RemoteControlListener;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.hardware.port.SensorPort;
@@ -15,7 +16,7 @@ import lejos.robotics.RegulatedMotor;
 import lejos.robotics.RegulatedMotorListener;
 import lejos.robotics.geometry.Point;
 
-public class Robot implements Controllable, RegulatedMotorListener, CollisionListener {
+public class Robot implements Controllable, RegulatedMotorListener, CollisionListener, RemoteControlListener {
 	private EV3TouchSensor touch;
 	private HiTechnicAccelerometer acc;
 	private EV3UltrasonicSensor ultra;
@@ -35,6 +36,8 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 	
 	// collision detection
 	private CollisionThread collisionThread;
+	
+	private boolean checkForCollisions;
 		
 	public Robot()
 	{
@@ -67,6 +70,11 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 	public Driving GetDriving()
 	{
 		return this.driving;
+	}
+	
+	public void SetCollisionCheck(boolean check)
+	{
+		this.checkForCollisions = check;
 	}
 	
 	//
@@ -103,6 +111,11 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 
 	@Override
 	public void DriveForward() {
+		if (this.currentMovement == MovementMode.Rotate)
+		{
+			this.Stop();
+		}
+		
 		this.currentMovement = MovementMode.Drive;
 		
 		this.driving.DriveForward();
@@ -110,6 +123,11 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 
 	@Override
 	public void DriveBackward() {
+		if (this.currentMovement == MovementMode.Rotate)
+		{
+			this.Stop();
+		}
+		
 		this.currentMovement = MovementMode.Drive;
 		
 		this.driving.DriveBackward();
@@ -117,6 +135,11 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 
 	@Override
 	public void TurnRight() {
+		if (this.currentMovement == MovementMode.Drive)
+		{
+			this.Stop();
+		}
+		
 		this.currentMovement = MovementMode.Rotate;
 		
 		this.driving.TurnRight();
@@ -124,6 +147,11 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 
 	@Override
 	public void TurnLeft() {
+		if (this.currentMovement == MovementMode.Drive)
+		{
+			this.Stop();
+		}
+		
 		this.currentMovement = MovementMode.Rotate;
 		
 		this.driving.TurnLeft();
@@ -144,7 +172,10 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 		{
 			if (this.currentMovement == MovementMode.Drive)
 			{
-				this.collisionThread.WatchForObstacles(true);
+				if (this.checkForCollisions)
+				{
+					this.collisionThread.WatchForObstacles(true);
+				}
 				
 				lastTachoCount = tachoCount;
 				
@@ -161,8 +192,11 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 		if (this.currentMovement == MovementMode.Drive || this.currentMovement == MovementMode.Rotate)
 		{
 			if (this.currentMovement == MovementMode.Drive)
-			{				
-				this.collisionThread.WatchForObstacles(false);
+			{		
+				if (this.checkForCollisions)
+				{
+					this.collisionThread.WatchForObstacles(false);
+				}		
 				
 				int delta = tachoCount - lastTachoCount;
 				float distance = CalibratingUtil.ConvertMotorDegreesToDeviceDistance(delta);
@@ -239,5 +273,46 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 			
 			this.DriveDistanceBackward(0.15F);
 		}
+	}
+	
+	//
+	//
+	//
+
+	@Override
+	public void ConnectedToRemote() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void DisconnectedFromRemote() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void DriveRobotForward() {
+		this.DriveForward();
+	}
+
+	@Override
+	public void DriveRobotBackward() {
+		this.DriveBackward();
+	}
+
+	@Override
+	public void TurnRobotLeft() {
+		this.TurnLeft();
+	}
+
+	@Override
+	public void TurnRobotRight() {
+		this.TurnRight();
+	}
+
+	@Override
+	public void StopRobot() {
+		this.Stop();
 	}
 }

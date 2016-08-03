@@ -104,13 +104,14 @@ public class Program {
 		//drive.DriveDistanceForward(1, false);
 		//drive.TurnRightByDegrees(90, false);
 		
-		//RemoteControlServer ser = new RemoteControlServer();
-		//ser.start();
-		
 		Robot ro = new Robot();
 		CalibratingUtil caliu = new CalibratingUtil(ro.GetDriving());
 		
-		ro.DriveDistanceForward(1);
+		RemoteControlServer ser = new RemoteControlServer();
+		ser.SetListener(ro);
+		ser.start();		
+		
+		//ro.DriveDistanceForward(1);
 		/*drive.DriveDistanceForward(1, true);
 		HiTechnicAccelerometer ac = new HiTechnicAccelerometer(SensorPort.S1);
 		

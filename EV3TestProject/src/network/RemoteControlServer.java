@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import Serialize.ControlInput;
 import Serialize.RoboStatus;
 import interfaces.RemoteControlListener;
 import lejos.hardware.lcd.LCD;
@@ -54,6 +55,7 @@ public class RemoteControlServer extends Thread {
                 this.clientSocket = null;
                 
                 try {
+                	System.out.println("wait for re");
                     clientSocket = serverSocket.accept();
                     
                     listener.ConnectedToRemote();
@@ -63,7 +65,11 @@ public class RemoteControlServer extends Thread {
                     s.Y = 40;
                     s.Rotation = 700;
                     
+                    System.out.println("send pack!");
+                    
                     this.SendRoboStatus(s);
+                    
+                    System.out.println("pack sent!");
                     
                     this.HandleClient(clientSocket);
                 } catch (IOException e) {
@@ -200,13 +206,76 @@ public class RemoteControlServer extends Thread {
 	private void HandleData(byte code, byte[] data)
 	{	
 		// Handle data
+		String text = new String(data, StandardCharsets.UTF_8);
 		
 		if (code == 4)
 		{
-			String text = new String(data, StandardCharsets.UTF_8);
 			RoboStatus rs = Helper.GetObjectFromString(text, RoboStatus.class);
 			
-			LCD.drawString(Float.toString(rs.Rotation), 0, 0);
+			//LCD.drawString(Float.toString(rs.Rotation), 0, 0);
+		}
+		else if (code == 1)
+		{
+			ControlInput in = Helper.GetObjectFromString(text, ControlInput.class);
+			
+			//System.out.println(in.Code);
+			this.HandleControlInput(in);
+		}
+	}
+	
+	private void HandleControlInput(ControlInput input)
+	{
+		System.out.println("msg " + Integer.toString(input.Code) + " " + Boolean.toString(input.Released) + " rcvd");
+		
+		switch (input.Code)
+		{
+		// Forward
+		case 1:
+			if (input.Released)
+			{
+				listener.StopRobot();
+			}
+			else
+			{
+				listener.DriveRobotForward();
+			}
+			break;
+		// Forward
+		case 2:
+			if (input.Released)
+			{
+				listener.StopRobot();
+			}
+			else
+			{
+				listener.DriveRobotBackward();
+			}
+			break;
+		// Right
+		case 3:
+			if (input.Released)
+			{
+				listener.StopRobot();
+			}
+			else
+			{
+				listener.TurnRobotRight();
+			}
+			break;
+		// Left
+		case 4:
+			if (input.Released)
+			{
+				listener.StopRobot();
+			}
+			else
+			{
+				listener.TurnRobotLeft();
+			}
+			break;
+		case 5:
+			listener.StopRobot();
+			break;
 		}
 	}
 }
