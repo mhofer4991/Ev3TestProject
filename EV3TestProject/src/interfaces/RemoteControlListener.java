@@ -1,9 +1,12 @@
 package interfaces;
 
 public interface RemoteControlListener {
-	// 
+	// Connection handling
 	void ConnectedToRemote();
 	void DisconnectedFromRemote();
+	
+	// 
+	void CalibratingRequested();
 	
 	// Remote controlling the robot
 	void DriveRobotForward();

@@ -13,11 +13,11 @@ import lejos.utility.Delay;
  * Use this class if you want to detect obstacles while driving.
  */
 public class CollisionThread extends Thread {
-	private final static int CHECK_INTERVAL = 50; // ms
+	public final static int CHECK_INTERVAL = 50; // ms
 	
-	private final static float MIN_DISTANCE = 0.5F; // m
+	public final static float MIN_DISTANCE = 0.5F; // m
 	
-	private final static float MAX_ROTATION_CHANGE = 10; // degrees
+	public final static float MAX_ROTATION_CHANGE = 10; // degrees
 	
 	private EV3GyroSensor gyro;
 	

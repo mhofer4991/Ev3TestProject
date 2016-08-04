@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.rmi.server.RemoteServer;
 
 import calibrating.CalibratingUtil;
@@ -107,9 +109,15 @@ public class Program {
 		Robot ro = new Robot();
 		CalibratingUtil caliu = new CalibratingUtil(ro.GetDriving());
 		
-		RemoteControlServer ser = new RemoteControlServer();
-		ser.SetListener(ro);
-		ser.start();		
+		RemoteControlServer ser = new RemoteControlServer(ro);
+		//ser.SetListener();
+		//ser.start();
+		
+		ro.AddListener(ser);
+		ro.SetCollisionCheck(true);
+		//ro.DriveDistanceForward(0.75F);
+		
+		System.out.println(ByteOrder.nativeOrder());
 		
 		//ro.DriveDistanceForward(1);
 		/*drive.DriveDistanceForward(1, true);
@@ -180,7 +188,7 @@ public class Program {
 		}*/
 		
 		
-		Delay.msDelay(2000);
+		Delay.msDelay(5000);
 	}
 
 }

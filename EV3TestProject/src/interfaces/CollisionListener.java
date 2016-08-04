@@ -1,7 +1,7 @@
 package interfaces;
 
 public interface CollisionListener {
-	void ObstacleDetected(float remainingDistance);
+	void ObstacleDetected(float distance);
 	
 	void UnexpectedRotationDetected();
 	

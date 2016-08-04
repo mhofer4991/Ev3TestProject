@@ -135,6 +135,9 @@ public class Driving {
 	{
 		this.left.startSynchronization();
 
+		this.left.flt(true);
+		this.right.flt(true);
+		
 		this.left.stop();
 		this.right.stop();
 		

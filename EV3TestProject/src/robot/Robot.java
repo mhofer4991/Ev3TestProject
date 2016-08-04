@@ -1,9 +1,16 @@
 package robot;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+import Serialize.RoboStatus;
 import calibrating.CalibratingUtil;
 import interfaces.CollisionListener;
 import interfaces.Controllable;
 import interfaces.RemoteControlListener;
+import interfaces.StatusListener;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.hardware.port.SensorPort;
@@ -15,6 +22,7 @@ import lejos.hardware.sensor.HiTechnicAccelerometer;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.RegulatedMotorListener;
 import lejos.robotics.geometry.Point;
+import lejos.utility.Delay;
 
 public class Robot implements Controllable, RegulatedMotorListener, CollisionListener, RemoteControlListener {
 	private EV3TouchSensor touch;
@@ -38,6 +46,12 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 	private CollisionThread collisionThread;
 	
 	private boolean checkForCollisions;
+	
+	// listeners
+	private List<StatusListener> listeners;
+	
+	// Navigation	
+	private PlannedMovement plannedMove;
 		
 	public Robot()
 	{
@@ -46,6 +60,9 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 		this.ultra = new EV3UltrasonicSensor(SensorPort.S2);
 		this.color = new EV3ColorSensor(SensorPort.S3);
 		this.gyro = new EV3GyroSensor(SensorPort.S4);
+		
+		this.listeners = new ArrayList<StatusListener>();
+		this.plannedMove = null;
 		
 		this.position = new Point(0, 0);
 		
@@ -77,6 +94,26 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 		this.checkForCollisions = check;
 	}
 	
+	public void AddListener(StatusListener listener)
+	{
+		this.listeners.add(listener);
+	}
+	
+	public RoboStatus GetStatus()
+	{
+		RoboStatus status = new RoboStatus();
+		status.X = position.x;
+		status.Y = position.y;
+		
+		float[] data = new float[1];
+		
+		gyro.getAngleMode().fetchSample(data, 0);
+		
+		status.Rotation = data[0];
+		
+		return status;
+	}
+	
 	//
 	// Controllable interface
 	//
@@ -85,12 +122,16 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 	public void DriveDistanceForward(float distance) {
 		this.currentMovement = MovementMode.Drive;
 		
+		this.plannedMove = new PlannedMovement(this.currentMovement, distance);
+		
 		this.driving.DriveDistanceForward(distance, false);
 	}
 
 	@Override
 	public void DriveDistanceBackward(float distance) {
 		this.currentMovement = MovementMode.Drive;
+		
+		this.plannedMove = new PlannedMovement(this.currentMovement, distance);
 		
 		this.driving.DriveDistanceBackward(distance, false);
 	}
@@ -99,12 +140,16 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 	public void TurnLeftByDegrees(float degrees) {
 		this.currentMovement = MovementMode.Rotate;
 		
+		this.plannedMove = new PlannedMovement(this.currentMovement, degrees);
+		
 		this.driving.TurnLeftByDegrees(degrees, false);
 	}
 
 	@Override
 	public void TurnRightByDegrees(float degrees) {
 		this.currentMovement = MovementMode.Rotate;
+		
+		this.plannedMove = new PlannedMovement(this.currentMovement, degrees);
 		
 		this.driving.TurnRightByDegrees(degrees, false);
 	}
@@ -161,6 +206,12 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 	public void Stop() {
 		this.driving.Stop();
 	}
+
+	@Override
+	public void DriveToPosition() {
+		// TODO Auto-generated method stub
+		
+	}
 	
 	//
 	// motor listener
@@ -193,11 +244,15 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 		{
 			if (this.currentMovement == MovementMode.Drive)
 			{		
-				if (this.checkForCollisions)
+				// TODO:
+				// Is this safe?
+				/*if (this.checkForCollisions)
 				{
 					this.collisionThread.WatchForObstacles(false);
-				}		
+				}*/		
 				
+				// TODO:
+				// What to do with very small deltas?
 				int delta = tachoCount - lastTachoCount;
 				float distance = CalibratingUtil.ConvertMotorDegreesToDeviceDistance(delta);
 				Point newPosition = this.position;
@@ -211,7 +266,19 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 				this.position = new Point(
 						newPosition.x + g, 
 						newPosition.y + a);
+				
+				System.out.println(delta);
+				System.out.println(this.position.x + " - " + this.position.y);
 			}
+			
+			RoboStatus status = this.GetStatus();
+			
+			for (StatusListener listener : listeners)
+			{
+				listener.StatusUpdated(status);
+			}
+			
+			this.currentMovement = MovementMode.Idle;
 		}
 	}
 	
@@ -220,19 +287,52 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 	//
 	
 	@Override
-	public void ObstacleDetected(float remainingDistance) {
+	public void ObstacleDetected(float distance) {
 		if (this.currentMovement == MovementMode.Drive)
 		{
 			int delta = Math.abs(driving.GetLeft().getTachoCount() - lastTachoCount);
-			float distance = CalibratingUtil.ConvertMotorDegreesToDeviceDistance(delta);
+			float leftDistance = 0;
 			
-			if (distance < remainingDistance)
+			if (this.plannedMove != null)
+			{
+				leftDistance = this.plannedMove.Value - CalibratingUtil.ConvertMotorDegreesToDeviceDistance(delta);
+			}
+			
+			if (leftDistance < distance)
 			{
 				// Just drive along
 			}
 			else
 			{
 				this.Stop();
+				
+				// Wait for the obstacle to move away.
+				float[] data = new float[1];
+				boolean rescued = false;
+				
+				for (int i = 0; i < 5 && !rescued; i++)
+				{
+					Delay.msDelay(1000);
+					System.out.println("look...");
+					
+					ultra.getDistanceMode().fetchSample(data, 0);
+					
+					if (leftDistance < data[0] || data[0] > CollisionThread.MIN_DISTANCE * 2)
+					{
+						// TODO:
+						// This has to change...
+						this.currentMovement = MovementMode.Drive;
+						
+						this.plannedMove = new PlannedMovement(this.currentMovement, leftDistance);
+						
+						this.driving.DriveDistanceForward(leftDistance, true);
+					}
+				}
+				
+				if (!rescued)
+				{
+					
+				}
 			}
 		}
 	}
@@ -261,7 +361,7 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 				this.TurnLeftByDegrees(diff);
 			}
 			
-			//System.out.println("unexpected rotation detected!");
+			System.out.println("unexpected rotation detected!");
 		}
 	}
 
@@ -314,5 +414,11 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 	@Override
 	public void StopRobot() {
 		this.Stop();
+	}
+
+	@Override
+	public void CalibratingRequested() {
+		// TODO Auto-generated method stub
+		
 	}
 }

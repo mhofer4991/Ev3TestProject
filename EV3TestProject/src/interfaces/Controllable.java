@@ -15,6 +15,8 @@ public interface Controllable {
 	void DriveBackward();
 	void TurnRight();
 	void TurnLeft();
+	
+	void DriveToPosition();
 
 	void Stop();
 }

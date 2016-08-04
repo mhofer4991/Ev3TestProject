@@ -16,31 +16,39 @@ import java.util.List;
 import Serialize.ControlInput;
 import Serialize.RoboStatus;
 import interfaces.RemoteControlListener;
+import interfaces.StatusListener;
 import lejos.hardware.lcd.LCD;
 import lejos.utility.Delay;
 
-public class RemoteControlServer extends Thread {
+public class RemoteControlServer extends Thread implements StatusListener {
 	public final static int PORT = 4001;
 	
 	private RemoteControlListener listener;
+	
+	private RemoteInputHandler inputHandler;
 	
 	private boolean running;
 	
 	private Socket clientSocket;
 	
-	public RemoteControlServer()
+	private boolean isConnected;
+	
+	public RemoteControlServer(RemoteControlListener listener)
 	{		
 		this.running = true;
-	}
-	
-	public void SetListener(RemoteControlListener listener)
-	{
+        this.isConnected = false;
 		this.listener = listener;
+		this.inputHandler = new RemoteInputHandler(listener);
 	}
 	
 	public void Stop()
 	{
 		running = false;
+	}
+	
+	public boolean IsConnected()
+	{
+		return this.isConnected;
 	}
 	
 	@Override
@@ -56,11 +64,18 @@ public class RemoteControlServer extends Thread {
                 
                 try {
                 	System.out.println("wait for re");
+                	
+        			this.isConnected = false;
+        			this.inputHandler.Reset();
+        			
                     clientSocket = serverSocket.accept();
+
+                	System.out.println("connected");
                     
+                    this.isConnected = true;
                     listener.ConnectedToRemote();
 
-                    RoboStatus s = new RoboStatus();
+                    /*RoboStatus s = new RoboStatus();
                     s.X = 20;
                     s.Y = 40;
                     s.Rotation = 700;
@@ -69,10 +84,11 @@ public class RemoteControlServer extends Thread {
                     
                     this.SendRoboStatus(s);
                     
-                    System.out.println("pack sent!");
+                    System.out.println("pack sent!");*/
                     
                     this.HandleClient(clientSocket);
                 } catch (IOException e) {
+        			this.isConnected = false;
                 	listener.DisconnectedFromRemote();
                 }
             }       
@@ -91,33 +107,28 @@ public class RemoteControlServer extends Thread {
 	 */
 	public void SendRoboStatus(RoboStatus status)
 	{		
-		try {
 			String data = Helper.GetObjectAsString(status);
 			byte[] bd = data.getBytes();
 			
 			this.SendData((byte)5, bd);
-			
-			/*ByteBuffer buffer = ByteBuffer.allocate(4).order(ByteOrder.nativeOrder());
-		    buffer.putInt(bd.length);
+	}
+	
+	private void SendData(byte code, byte[] data)
+	{		
+		try {
+			ByteBuffer buffer = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN); // ByteOrder.nativeOrder());
+		    buffer.putInt(data.length);
 		    
-			clientSocket.getOutputStream().write(new byte[] { 5 });
+			clientSocket.getOutputStream().write(new byte[] { code });
 			clientSocket.getOutputStream().write(buffer.array());
-			clientSocket.getOutputStream().write(bd);*/
+			clientSocket.getOutputStream().write(data);
 			
 		} catch (IOException e) {
+			this.isConnected = false;
+        	listener.DisconnectedFromRemote();
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-	
-	private void SendData(byte code, byte[] data) throws IOException
-	{		
-		ByteBuffer buffer = ByteBuffer.allocate(4).order(ByteOrder.nativeOrder());
-	    buffer.putInt(data.length);
-	    
-		clientSocket.getOutputStream().write(new byte[] { code });
-		clientSocket.getOutputStream().write(buffer.array());
-		clientSocket.getOutputStream().write(data);
 	}
 	
 	private void HandleClient(Socket client) throws IOException
@@ -227,55 +238,18 @@ public class RemoteControlServer extends Thread {
 	{
 		System.out.println("msg " + Integer.toString(input.Code) + " " + Boolean.toString(input.Released) + " rcvd");
 		
-		switch (input.Code)
+		this.inputHandler.HandleInput(input);
+	}
+	
+	//
+	//
+	//
+
+	@Override
+	public void StatusUpdated(RoboStatus status) {
+		if (this.isConnected)
 		{
-		// Forward
-		case 1:
-			if (input.Released)
-			{
-				listener.StopRobot();
-			}
-			else
-			{
-				listener.DriveRobotForward();
-			}
-			break;
-		// Forward
-		case 2:
-			if (input.Released)
-			{
-				listener.StopRobot();
-			}
-			else
-			{
-				listener.DriveRobotBackward();
-			}
-			break;
-		// Right
-		case 3:
-			if (input.Released)
-			{
-				listener.StopRobot();
-			}
-			else
-			{
-				listener.TurnRobotRight();
-			}
-			break;
-		// Left
-		case 4:
-			if (input.Released)
-			{
-				listener.StopRobot();
-			}
-			else
-			{
-				listener.TurnRobotLeft();
-			}
-			break;
-		case 5:
-			listener.StopRobot();
-			break;
+			this.SendRoboStatus(status);
 		}
 	}
 }
