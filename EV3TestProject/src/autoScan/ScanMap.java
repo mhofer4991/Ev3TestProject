@@ -13,16 +13,13 @@ public class ScanMap {
 	
 	public void AddScanResult(float direction, float freeDistance, Position startPosition)
 	{
-		// TODO: Berechnen der benötigten Zellen in X und Y Richtung
-		// Für jede Zelle, die Aussenkanten als Gerade und prüfen ob sie sich mit der start ziel geraden schneiden
-		
-		
-		// TODO: Checken ob Array zu klein
-		
-		// TODO: gegebenfalls Array entsprechend vergrößern
+		// TODO: Checken um wieviel das Array zu klein ist	
+		// Differenz zwischen größtem x und y bei scan und array
+		// TODO: Array entsprechend vergrößern
+		// mittels differnz entsprechend vergrößern
 		
 		// TODO: Alle gescannten Zellen auf free setzen
-		
+		// Alle Zellen durchgehen, und die die gescannt wurden(Linie geht durch) auf free setzen
 	}
 	
 	// Direction: 0 - up, 1 - right, 2 - down, 3 - left
@@ -139,5 +136,38 @@ public class ScanMap {
 		}
 		
 		this.map.Set_Fields(next);
+	}
+	
+	// Start is the Bottom Left Position of the Line/Square, End is the Top Right Position of the Line/Square
+	public static boolean LineIntersectsSquare (float lineXStart, float lineYStart, float lineXEnd, float lineYEnd, float squareXStart, float squareYStart, float squareXEnd, float squareYEnd)
+	{
+		// Prüfen ob das Quadrat im rechteck aus start und endpunkt der line liegt
+		if ((lineXStart < squareXStart && lineXEnd < squareXStart) || (lineYStart < squareYStart && lineYEnd < squareYStart) || (lineXStart > squareXEnd && lineXEnd > squareXEnd) || (lineYStart > squareYEnd && lineYEnd > squareYEnd))
+		{
+			return false;
+		}
+		
+		// Start or end inside.
+		if ((lineXStart > squareXStart && lineXStart < squareXEnd && lineYStart > squareYStart && lineYStart < squareYEnd) || (lineXEnd > squareXStart && lineXEnd < squareXEnd && lineYEnd > squareYStart && lineYEnd < squareYEnd)) 
+		{
+			return true;
+		}
+		
+		// Steigung der Linie berechnen
+		float m = (lineYEnd - lineYStart) / (lineXEnd - lineXStart);
+
+	    float y = m * (squareXStart - lineXStart) + lineYStart;
+	    if (y > squareYStart && y < squareYEnd) return true;
+
+	    y = m * (squareXEnd - lineXStart) + lineYStart;
+	    if (y > squareYStart && y < squareYEnd) return true;
+
+	    float x = (squareYStart - lineYStart) / m + lineXStart;
+	    if (x > squareXStart && x < squareXEnd) return true;
+
+	    x = (squareYEnd - lineYStart) / m + lineXStart;
+	    if (x > squareXStart && x < squareXEnd) return true;		
+		
+		return false;
 	}
 }

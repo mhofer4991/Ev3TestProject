@@ -61,7 +61,31 @@ public class ScanAlgorithm {
 		Draw(sm.map);
 	}
 	
+	public ScanAlgorithm(Map map)
+	{
+		this.abort = false;
+	}
+	
 	public boolean abort;
+
+	public void Scan()
+	{
+		this.abort = false;
+		
+		while (!this.abort)
+		{
+			// TODO: Current Field auf free&scanned setzen
+			
+			// TODO: Rundumscan
+			// TODO: Scan in die Richtungen wo unscanned oder free ist
+						
+			// TODO: Liste der free Felder
+			// TODO: Liste der anfahrbaren free Felder
+			// TODO: Falls keine freien, ungescannten mehr anfahrbar -> break
+			
+			// TODO: Nächstes freies, ungescanntes Feld anfahren
+		}		
+	}
 	
 	public static void Draw(Map map)
 	{
@@ -83,5 +107,5 @@ public class ScanAlgorithm {
 		
 		System.out.println();
 		System.out.println();
-	}	  
+	}	  	
 }
