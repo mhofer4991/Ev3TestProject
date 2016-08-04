@@ -4,6 +4,16 @@ import Serialize.ControlInput;
 import interfaces.RemoteControlListener;
 
 public class RemoteInputHandler {
+	public final static int CODE_FORWARD = 1;
+	
+	public final static int CODE_BACKWARD = 2;
+	
+	public final static int CODE_RIGHT = 3;
+	
+	public final static int CODE_LEFT = 4;
+	
+	public final static int CODE_STOP = 5;
+	
 	private RemoteControlListener listener;
 	
 	private ControlInput previousInput;
@@ -24,7 +34,7 @@ public class RemoteInputHandler {
 		switch (input.Code)
 		{
 		// Forward
-		case 1:
+		case CODE_FORWARD:
 			if (input.Released)
 			{
 				if (previousInput.Code == input.Code)
@@ -45,7 +55,7 @@ public class RemoteInputHandler {
 			}
 			break;
 		// Forward
-		case 2:
+		case CODE_BACKWARD:
 			if (input.Released)
 			{
 				if (previousInput.Code == input.Code)
@@ -66,7 +76,7 @@ public class RemoteInputHandler {
 			}
 			break;
 		// Right
-		case 3:
+		case CODE_RIGHT:
 			if (input.Released)
 			{
 				if (previousInput.Code == input.Code)
@@ -87,7 +97,7 @@ public class RemoteInputHandler {
 			}
 			break;
 		// Left
-		case 4:
+		case CODE_LEFT:
 			if (input.Released)
 			{
 				if (previousInput.Code == input.Code)
@@ -107,7 +117,7 @@ public class RemoteInputHandler {
 				}
 			}
 			break;
-		case 5:
+		case CODE_STOP:
 			listener.StopRobot();	
 			break;
 		}

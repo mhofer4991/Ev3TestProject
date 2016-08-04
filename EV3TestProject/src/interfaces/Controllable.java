@@ -1,5 +1,7 @@
 package interfaces;
 
+import lejos.robotics.geometry.Point;
+
 /**
  * 
  * @author Markus
@@ -16,7 +18,7 @@ public interface Controllable {
 	void TurnRight();
 	void TurnLeft();
 	
-	void DriveToPosition();
+	void DriveToPosition(Point position);
 
 	void Stop();
 }

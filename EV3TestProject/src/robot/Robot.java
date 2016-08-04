@@ -208,9 +208,39 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 	}
 
 	@Override
-	public void DriveToPosition() {
-		// TODO Auto-generated method stub
+	public void DriveToPosition(Point position) {
+		float a = position.x - this.position.x;
+		float g = position.y - this.position.y;
+		float h = (float)Math.sqrt(Math.pow(a, 2) + Math.pow(g, 2));
 		
+		float angle = (float) (Math.acos(g / h) * (180 / Math.PI));
+		
+		/*if (g < 0)
+		{
+			angle = 180 - angle;
+		}*/
+		
+		float[] gyroData = new float[1];
+		
+		gyro.getAngleMode().fetchSample(gyroData, 0);		
+		
+		if (a < 0)
+		{
+			// Consider robots current position
+			angle = angle + gyroData[0];
+			
+			this.TurnLeftByDegrees(angle);
+		}
+		else
+		{
+			// Consider robots current position
+			angle = angle - gyroData[0];
+			System.out.println(angle);
+			
+			this.TurnRightByDegrees(angle);
+		}
+		
+		this.DriveDistanceForward(h);
 	}
 	
 	//
@@ -225,6 +255,7 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 			{
 				if (this.checkForCollisions)
 				{
+					this.collisionThread.ResetValues();
 					this.collisionThread.WatchForObstacles(true);
 				}
 				
@@ -267,6 +298,8 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 						newPosition.x + g, 
 						newPosition.y + a);
 				
+				System.out.println(gyroData[0]);
+				System.out.println(distance);
 				System.out.println(delta);
 				System.out.println(this.position.x + " - " + this.position.y);
 			}

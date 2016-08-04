@@ -19,6 +19,7 @@ import lejos.hardware.sensor.EV3GyroSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.HiTechnicAccelerometer;
 import lejos.robotics.RegulatedMotor;
+import lejos.robotics.geometry.Point;
 import lejos.utility.Delay;
 import network.RemoteControlServer;
 import robot.Driving;
@@ -103,7 +104,7 @@ public class Program {
 		//LCD.drawString(Float.toString(caliu.GetDeviceDegreesByMotorDegrees(1000)), 0, 0);
 		//drive.DriveForward(1000);
 		//LCD.drawString(Float.toString(caliu.GetDeviceDistanceByMotorDegrees(1000)), 0, 0);
-		//drive.DriveDistanceForward(1, false);
+		//drive.(1, false);
 		//drive.TurnRightByDegrees(90, false);
 		
 		Robot ro = new Robot();
@@ -111,13 +112,20 @@ public class Program {
 		
 		RemoteControlServer ser = new RemoteControlServer(ro);
 		//ser.SetListener();
-		//ser.start();
+		ser.start();
 		
 		ro.AddListener(ser);
 		ro.SetCollisionCheck(true);
-		//ro.DriveDistanceForward(0.75F);
+		ro.DriveDistanceForward(0.5F);
+		//ro.TurnRightByDegrees(-135);
 		
-		System.out.println(ByteOrder.nativeOrder());
+		ro.DriveToPosition(new Point(0.5F, 0.5F));
+		ro.DriveToPosition(new Point(0.5F, -0.5F));
+		ro.DriveToPosition(new Point(-0.5F, -0.5F));
+		ro.DriveToPosition(new Point(-0.5F, 0.5F));
+		ro.DriveToPosition(new Point(0, 0));
+				
+		//System.out.println(ByteOrder.nativeOrder());
 		
 		//ro.DriveDistanceForward(1);
 		/*drive.DriveDistanceForward(1, true);

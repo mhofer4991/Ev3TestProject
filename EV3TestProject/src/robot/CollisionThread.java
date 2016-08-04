@@ -59,12 +59,17 @@ public class CollisionThread extends Thread {
 
 		if (watch)
 		{
-			float[] data = new float[1];
-			gyro.getAngleMode().fetchSample(data, 0);
-			
-			lastRotation = data[0];
-			updates = 0;
+			this.ResetValues();
 		}
+	}
+	
+	public void ResetValues()
+	{
+		float[] data = new float[1];
+		gyro.getAngleMode().fetchSample(data, 0);
+		
+		lastRotation = data[0];
+		updates = 0;
 	}
 	
 	public void Stop()
@@ -100,6 +105,11 @@ public class CollisionThread extends Thread {
 					{
 						listener.UnexpectedRotationDetected();
 					}
+				}
+				
+				if (updates % 200 == 0)
+				{
+					lastRotation = gyroData[0];
 				}
 				
 				// analyse touch sensor
