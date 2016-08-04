@@ -97,9 +97,11 @@ public class ScanAlgorithm {
 			{
 				
 				String text = fields[i][j].Get_Position().Get_X() + " / " + fields[i][j].Get_Position().Get_Y() + " : " + fields[i][j].Get_State();
-				System.out.println(text);/*
+				System.out.println(text);
 				
-				System.out.print(fields[i][j].Get_State().ordinal());*/
+				/*				
+				System.out.print(fields[i][j].Get_State().ordinal());
+				*/
 			}
 			
 			System.out.println();
