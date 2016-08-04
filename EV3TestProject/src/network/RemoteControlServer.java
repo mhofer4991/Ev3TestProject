@@ -23,6 +23,10 @@ import lejos.utility.Delay;
 public class RemoteControlServer extends Thread implements RobotStatusListener {
 	public final static int PORT = 4001;
 	
+	public final static byte MSGCODE_REMOTE_CONTROL_INPUT = 1;
+	
+	public final static byte MSGCODE_ROBOT_STATUS_UPDATE = 5;
+	
 	private RemoteControlListener listener;
 	
 	private RemoteInputHandler inputHandler;
@@ -110,7 +114,7 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 			String data = Helper.GetObjectAsString(status);
 			byte[] bd = data.getBytes();
 			
-			this.SendData((byte)5, bd);
+			this.SendData(MSGCODE_ROBOT_STATUS_UPDATE, bd);
 	}
 	
 	private void SendData(byte code, byte[] data)
@@ -170,48 +174,6 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 				}
 			}
 		}
-		
-		/*
-		BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-
-		String code = in.readLine();
-		boolean invalid = false;
-		
-		while (!code.equals("x") && !invalid)
-		{
-			for (RemoteControlListener listener : listeners)
-			{
-				if (code.equals("l"))
-				{
-					listener.TurnRobotLeft();
-				}
-				else if (code.equals("r"))
-				{
-					listener.TurnRobotRight();
-				}
-				else if (code.equals("f"))
-				{
-					listener.DriveRobotForward();
-				}
-				else if (code.equals("b"))
-				{
-					listener.DriveRobotBackward();
-				}
-				else if (code.equals("s"))
-				{
-					listener.StopRobot();
-				}
-				else
-				{
-					invalid = true;
-				}
-			}
-			
-			code = in.readLine();
-		}
-
-    	in.close();
-        client.close();*/
 	}
 	
 	private void HandleData(byte code, byte[] data)
@@ -219,13 +181,15 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 		// Handle data
 		String text = new String(data, StandardCharsets.UTF_8);
 		
+		// TODO:
+		// Change it
 		if (code == 4)
 		{
 			RoboStatus rs = Helper.GetObjectFromString(text, RoboStatus.class);
 			
 			//LCD.drawString(Float.toString(rs.Rotation), 0, 0);
 		}
-		else if (code == 1)
+		else if (code == MSGCODE_REMOTE_CONTROL_INPUT)
 		{
 			ControlInput in = Helper.GetObjectFromString(text, ControlInput.class);
 			
