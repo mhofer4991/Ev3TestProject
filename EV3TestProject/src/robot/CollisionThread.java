@@ -107,6 +107,7 @@ public class CollisionThread extends Thread {
 					}
 				}
 				
+				// refresh last rotation each 10 seconds (50 * 200)
 				if (updates % 200 == 0)
 				{
 					lastRotation = gyroData[0];

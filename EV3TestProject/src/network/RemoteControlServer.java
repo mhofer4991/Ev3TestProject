@@ -16,11 +16,11 @@ import java.util.List;
 import Serialize.ControlInput;
 import Serialize.RoboStatus;
 import interfaces.RemoteControlListener;
-import interfaces.StatusListener;
+import interfaces.RobotStatusListener;
 import lejos.hardware.lcd.LCD;
 import lejos.utility.Delay;
 
-public class RemoteControlServer extends Thread implements StatusListener {
+public class RemoteControlServer extends Thread implements RobotStatusListener {
 	public final static int PORT = 4001;
 	
 	private RemoteControlListener listener;
@@ -246,7 +246,7 @@ public class RemoteControlServer extends Thread implements StatusListener {
 	//
 
 	@Override
-	public void StatusUpdated(RoboStatus status) {
+	public void RobotStatusUpdated(RoboStatus status) {
 		if (this.isConnected)
 		{
 			this.SendRoboStatus(status);

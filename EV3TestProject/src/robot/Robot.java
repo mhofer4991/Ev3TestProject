@@ -10,7 +10,7 @@ import calibrating.CalibratingUtil;
 import interfaces.CollisionListener;
 import interfaces.Controllable;
 import interfaces.RemoteControlListener;
-import interfaces.StatusListener;
+import interfaces.RobotStatusListener;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.hardware.port.SensorPort;
@@ -48,7 +48,7 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 	private boolean checkForCollisions;
 	
 	// listeners
-	private List<StatusListener> listeners;
+	private List<RobotStatusListener> listeners;
 	
 	// Navigation	
 	private PlannedMovement plannedMove;
@@ -61,7 +61,7 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 		this.color = new EV3ColorSensor(SensorPort.S3);
 		this.gyro = new EV3GyroSensor(SensorPort.S4);
 		
-		this.listeners = new ArrayList<StatusListener>();
+		this.listeners = new ArrayList<RobotStatusListener>();
 		this.plannedMove = null;
 		
 		this.position = new Point(0, 0);
@@ -89,12 +89,21 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 		return this.driving;
 	}
 	
+	public float GetRotation()
+	{
+		float[] data = new float[1];
+		
+		gyro.getAngleMode().fetchSample(data, 0);
+		
+		return data[0];
+	}
+	
 	public void SetCollisionCheck(boolean check)
 	{
 		this.checkForCollisions = check;
 	}
 	
-	public void AddListener(StatusListener listener)
+	public void AddListener(RobotStatusListener listener)
 	{
 		this.listeners.add(listener);
 	}
@@ -260,12 +269,9 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 				}
 				
 				lastTachoCount = tachoCount;
-				
-				float[] data = new float[1];
-				
-				gyro.getAngleMode().fetchSample(data, 0);
-				lastRotation = data[0];
 			}
+			
+			lastRotation = GetRotation();
 		}
 	}
 
@@ -277,10 +283,10 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 			{		
 				// TODO:
 				// Is this safe?
-				/*if (this.checkForCollisions)
+				if (this.checkForCollisions)
 				{
 					this.collisionThread.WatchForObstacles(false);
-				}*/		
+				}	
 				
 				// TODO:
 				// What to do with very small deltas?
@@ -298,17 +304,17 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 						newPosition.x + g, 
 						newPosition.y + a);
 				
-				System.out.println(gyroData[0]);
-				System.out.println(distance);
-				System.out.println(delta);
-				System.out.println(this.position.x + " - " + this.position.y);
+				//System.out.println(gyroData[0]);
+				//System.out.println(distance);
+				//System.out.println(delta);
+				//System.out.println(this.position.x + " - " + this.position.y);
 			}
 			
 			RoboStatus status = this.GetStatus();
 			
-			for (StatusListener listener : listeners)
+			for (RobotStatusListener listener : listeners)
 			{
-				listener.StatusUpdated(status);
+				listener.RobotStatusUpdated(status);
 			}
 			
 			this.currentMovement = MovementMode.Idle;
@@ -376,22 +382,33 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 		{
 			this.Stop();
 			
-			// rotate back
-			float[] data = new float[1];
-			
+			// rotate back			
 			this.DriveDistanceBackward(0.15F);
+			
+			float[] data = new float[1];
 			
 			gyro.getAngleMode().fetchSample(data, 0);	
 			
 			float diff = data[0] - lastRotation;
 			
-			if (data[0] < 0)
+			/*if (diff < 0)
 			{
-				this.TurnRightByDegrees(diff);
+				this.TurnRightByDegrees(Math.abs(diff));
 			}
 			else
 			{
-				this.TurnLeftByDegrees(diff);
+				this.TurnLeftByDegrees(Math.abs(diff));
+			}*/
+			
+			if (data[0] > lastRotation)
+			{
+				// robot turned right. correct it by turning left
+				this.TurnLeftByDegrees(Math.abs(diff));
+			}
+			else
+			{
+				// robot turned left. correct it by turning right
+				this.TurnRightByDegrees(Math.abs(diff));
 			}
 			
 			System.out.println("unexpected rotation detected!");

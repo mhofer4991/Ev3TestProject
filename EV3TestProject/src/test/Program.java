@@ -115,15 +115,16 @@ public class Program {
 		ser.start();
 		
 		ro.AddListener(ser);
+		
 		ro.SetCollisionCheck(true);
-		ro.DriveDistanceForward(0.5F);
+		ro.DriveDistanceForward(2);
 		//ro.TurnRightByDegrees(-135);
 		
-		ro.DriveToPosition(new Point(0.5F, 0.5F));
+		/*ro.DriveToPosition(new Point(0.5F, 0.5F));
 		ro.DriveToPosition(new Point(0.5F, -0.5F));
 		ro.DriveToPosition(new Point(-0.5F, -0.5F));
 		ro.DriveToPosition(new Point(-0.5F, 0.5F));
-		ro.DriveToPosition(new Point(0, 0));
+		ro.DriveToPosition(new Point(0, 0));*/
 				
 		//System.out.println(ByteOrder.nativeOrder());
 		
