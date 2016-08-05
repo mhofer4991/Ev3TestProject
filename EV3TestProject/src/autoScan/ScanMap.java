@@ -57,6 +57,11 @@ public class ScanMap {
 			this.Extend(3, negY);
 		}
 		
+		minX -= 0.5F;
+		minY -= 0.5F;
+		maxX -= 0.5F;
+		maxY -= 0.5F;
+		
 		// TODO: Alle gescannten Zellen auf free setzen
 		// Alle Zellen durchgehen, und die die gescannt wurden(Linie geht durch) auf free setzen
 		for (int i = 0; i < this.map.Get_Fields().length; i++)
@@ -211,12 +216,12 @@ public class ScanMap {
 	// Checks if a line meets a field
 	public boolean LineMeetsField(float lineXStart, float lineYStart, float lineXEnd, float lineYEnd, int fieldIndexX, int fieldIndexY)
 	{
-		float squareXStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_X() - 0.5F;
-		float squareYStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_Y() - 0.5F;
+		float squareXStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_X(); // - 0.5F;
+		float squareYStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_Y(); // - 0.5F;
 		//float squareXEnd = squareXStart +0.5F;
 		//float squareYEnd = squareYStart +0.5F;
-		float squareXEnd = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_X() + 0.5F;
-		float squareYEnd = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_Y() + 0.5F;
+		float squareXEnd = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_X() + 1; // + 0.5F;
+		float squareYEnd = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_Y() + 1; // 0.5F;
 				
 		//System.out.println(squareXStart + " - " + squareYStart);
 		//System.out.println(squareXEnd + " - " + squareYEnd);
