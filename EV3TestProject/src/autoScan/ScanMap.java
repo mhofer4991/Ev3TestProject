@@ -1,5 +1,6 @@
 package autoScan;
 
+import java.util.ArrayList;
 import Serialize.*;
 
 public class ScanMap {
@@ -11,7 +12,8 @@ public class ScanMap {
 	
 	public Map map;
 	
-	public void AddScanResult(float direction, float freeDistance, Position startPosition)
+	// Adds the state of the scanresult to all fields
+	public void AddScanResult(float direction, float freeDistance, Position startPosition, Fieldstate state)
 	{
 		int minX = startPosition.Get_X();
 		int minY = startPosition.Get_Y();
@@ -25,9 +27,9 @@ public class ScanMap {
 				
 		// Checken um wieviel das Array zu klein ist	
 		// Differenz zwischen größtem x und y bei scan und array		
-		int posX = this.map.Get_Fields()[this.map.Get_Fields().length][0].Get_Position().Get_X() - maxX;
+		int posX = this.map.Get_Fields()[this.map.Get_Fields().length - 1][0].Get_Position().Get_X() - maxX;
 		int negX = this.map.Get_Fields()[0][0].Get_Position().Get_X() - minX;
-		int posY = this.map.Get_Fields()[0][this.map.Get_Fields()[0].length].Get_Position().Get_Y() - maxY;
+		int posY = this.map.Get_Fields()[0][this.map.Get_Fields()[0].length - 1].Get_Position().Get_Y() - maxY;
 		int negY = this.map.Get_Fields()[0][0].Get_Position().Get_Y() - minY;
 		
 		// Array entsprechend vergrößern
@@ -60,13 +62,34 @@ public class ScanMap {
 			{
 				if ((this.LineMeetsField(minX, minY, maxX, maxY, i, j)) && (this.map.Get_Fields()[i][j].Get_State() == Fieldstate.unscanned))
 				{
-					this.map.Get_Fields()[i][j].Set_State(Fieldstate.free);
+					this.map.Get_Fields()[i][j].Set_State(state);
 				}
 			}
 		}		
 	}
 	
-	// Direction: 0 - up, 1 - right, 2 - down, 3 - left
+
+	// Gets the indices of all free cells on the map
+	public ArrayList<Position> GetAllFreeCells()
+	{
+		ArrayList<Position> freeCells = new ArrayList<Position>();
+		
+		// TODO: Freie Zellen in diese Liste geben.
+		for (int i = 0; i < this.map.Get_Fields().length; i++)
+		{
+			for (int j = 0; j < this.map.Get_Fields()[0].length; j++)
+			{
+				if (this.map.Get_Fields()[i][j].Get_State() == Fieldstate.free)
+				{
+					freeCells.add(new Position(i, j));
+				}
+			}
+		}
+		
+		return freeCells;
+	}
+	
+	// Extends the map in a given direction: 0 - up, 1 - right, 2 - down, 3 - left
 	public void Extend(int direction, int amount) throws IllegalArgumentException
 	{
 		Field[][] current = this.map.Get_Fields();
@@ -182,6 +205,7 @@ public class ScanMap {
 		this.map.Set_Fields(next);
 	}
 	
+	// Checks if a line meets a field
 	public boolean LineMeetsField(float lineXStart, float lineYStart, float lineXEnd, float lineYEnd, int fieldIndexX, int fieldIndexY)
 	{
 		float squareXStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_X();

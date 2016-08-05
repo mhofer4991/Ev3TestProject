@@ -2,7 +2,6 @@ package pathfinding;
 
 import java.util.ArrayList;
 import Serialize.*;
-import lejos.utility.Delay;
 
 public class Program {
 
@@ -23,19 +22,18 @@ public class Program {
         	}
         }              
         
-        fields[5][2].Set_State(Fieldstate.occupied);
-        fields[4][2].Set_State(Fieldstate.occupied);
-        fields[3][2].Set_State(Fieldstate.occupied);
-        fields[3][3].Set_State(Fieldstate.occupied);
-        fields[3][4].Set_State(Fieldstate.occupied);
+        fields[0][1].Set_State(Fieldstate.occupied);
+        fields[0][2].Set_State(Fieldstate.occupied);
+        fields[1][0].Set_State(Fieldstate.occupied);
+        fields[1][1].Set_State(Fieldstate.occupied);
         
         map.Set_Fields(fields);
         
-        Route route1 = new Route(new Position(-2, 2), new Position(5, 5));
+        Route route1 = new Route(new Position(3, 2), new Position(5, 5));
         Route route2 = new Route(new Position(5, 5), new Position(5, 0));
         Route route3 = new Route(new Position(5, 0), new Position(0, 9));
         Route route4 = new Route(new Position(0, 9), new Position(4, 4));
-        Route route5 = new Route(new Position(4, 4), new Position(0, 79));
+        Route route5 = new Route(new Position(4, 4), new Position(0, 0));
 
         routes.add(route1);
         routes.add(route2);
@@ -64,10 +62,7 @@ public class Program {
         for (int i = 0; i < completeRoute.size(); i++)
         {
             System.out.print(completeRoute.get(i).Get_X() + "/" + completeRoute.get(i).Get_Y() + "  ->  ");
-        }
-       
-        
-        Delay.msDelay(5000);
+        }               
 	}	
 	
     public static void Draw(ArrayList<ArrayList<Position>> paths)

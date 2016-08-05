@@ -1,6 +1,9 @@
 package autoScan;
 
+import java.util.ArrayList;
+
 import Serialize.*;
+import pathfinding.*;
 
 public class ScanAlgorithm {
 	
@@ -72,16 +75,50 @@ public class ScanAlgorithm {
 	{
 		this.abort = false;
 		
+		ScanMap scanMap = new ScanMap();
+		
 		while (!this.abort)
 		{
 			// TODO: Current Field auf free&scanned setzen
 			
-			// TODO: Rundumscan
+			// TODO: Rundumscan bzw.
 			// TODO: Scan in die Richtungen wo unscanned oder free ist
 						
-			// TODO: Liste der free Felder
-			// TODO: Liste der anfahrbaren free Felder
-			// TODO: Falls keine freien, ungescannten mehr anfahrbar -> break
+			// Liste der free Felder
+			ArrayList<Position> freeCells = scanMap.GetAllFreeCells();
+			ArrayList<Position> routeToNextCell = new ArrayList<Position>();				
+			
+			// Liste der free Felder durchgehen und Route berechnen											
+			int i = 0;
+			
+			while (routeToNextCell.size() < 2 && i < freeCells.size())
+			{				
+				// Route berechnen
+				ArrayList<Route> startEnd = new ArrayList<Route>();
+				Route route = new Route(new Position(/* Current Robot Position*/), scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Get_Position());
+				startEnd.add(route);
+				
+				routeToNextCell = PathIO.GetPath(scanMap.map, startEnd, new A_Star()).get(0);
+				
+				// TChecken ob die Route mind. 2 einträge hat
+				if (routeToNextCell.size() >= 2)
+				{					
+					break;
+				}				
+				else
+				{
+					// TODO: Punkt ist nicht erreichbar
+					// Punkt auf unscnnned setzen?
+				}
+				
+				i++;
+			}
+			
+			// Wenn keine Felder mehr angefahren werden können
+			if (routeToNextCell.size() < 2)
+			{
+				return;
+			}
 			
 			// TODO: Nächstes freies, ungescanntes Feld anfahren
 		}		
