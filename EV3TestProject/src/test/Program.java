@@ -119,8 +119,8 @@ public class Program {
 		Manager mgr = new Manager(ro);
 		mgr.Start();
 		
-		//ro.SetCollisionCheck(true);
-		//ro.DriveDistanceForward(2);
+		ro.SetCollisionCheck(true);
+		ro.DriveDistanceForward(2);
 		//ro.TurnRightByDegrees(-135);
 		
 		/*ro.DriveToPosition(new Point(0.5F, 0.5F));

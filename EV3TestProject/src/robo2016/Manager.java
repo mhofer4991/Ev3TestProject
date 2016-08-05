@@ -36,7 +36,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
 
 	@Override
 	public void RobotStatusUpdated(RoboStatus status) {
-		this.remoteServer.SendRoboStatus(managedRobot.GetStatus());
+		//this.remoteServer.SendRoboStatus(managedRobot.GetStatus());
 	}
 	
 	//
