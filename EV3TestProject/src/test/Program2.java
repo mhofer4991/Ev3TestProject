@@ -36,10 +36,10 @@ public class Program2 {
         map.Extend(2, 3);
         map.Extend(3, 3);
 
-        //DrawMap(map);
+        DrawMap(map);
                 
-        map.AddScanResult(45, 3, new Position(0,0), Fieldstate.freeScanned);
-        
+        map.AddScanResult(315, 5, new Position(0,0), Fieldstate.freeScanned);
+        System.out.println("-----");
         /*System.out.println(map.LineMeetsField(0, 1, 0, -1, 3, 3));
         System.out.println(map.LineMeetsField(0, 1, 0, -1, 2, 2));
         System.out.println(map.LineMeetsField(0, 1, 0, -1, 3, 2));

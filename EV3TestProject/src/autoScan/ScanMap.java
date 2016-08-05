@@ -18,6 +18,8 @@ public class ScanMap {
 		int minX = startPosition.Get_X();
 		int minY = startPosition.Get_Y();
 		
+		direction -= 90;
+		
 		// TODO: Distanzen in X und Y richtig berechnen
 		int distanceX = (int)(freeDistance * Math.sin(Math.toRadians(direction)));
 		int distanceY = (int)(freeDistance * Math.cos(Math.toRadians(direction)));
@@ -27,9 +29,10 @@ public class ScanMap {
 				
 		// Checken um wieviel das Array zu klein ist	
 		// Differenz zwischen größtem x und y bei scan und array		
-		int posX = this.map.Get_Fields()[this.map.Get_Fields().length - 1][0].Get_Position().Get_X() - maxX;
+		//int posX = this.map.Get_Fields()[this.map.Get_Fields().length - 1][0].Get_Position().Get_X() - maxX;
+		int posX = maxX - this.map.Get_Fields()[this.map.Get_Fields().length - 1][0].Get_Position().Get_X();
 		int negX = this.map.Get_Fields()[0][0].Get_Position().Get_X() - minX;
-		int posY = this.map.Get_Fields()[0][this.map.Get_Fields()[0].length - 1].Get_Position().Get_Y() - maxY;
+		int posY = maxY - this.map.Get_Fields()[0][this.map.Get_Fields()[0].length - 1].Get_Position().Get_Y();
 		int negY = this.map.Get_Fields()[0][0].Get_Position().Get_Y() - minY;
 		
 		// Array entsprechend vergrößern
@@ -208,14 +211,16 @@ public class ScanMap {
 	// Checks if a line meets a field
 	public boolean LineMeetsField(float lineXStart, float lineYStart, float lineXEnd, float lineYEnd, int fieldIndexX, int fieldIndexY)
 	{
-		float squareXStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_X() - 0.25F;
-		float squareYStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_Y() - 0.25F;
-		float squareXEnd = squareXStart +1;
-		float squareYEnd = squareYStart +1;
-
-		System.out.println(squareXStart + " - " + squareYStart);
-		System.out.println(squareXEnd + " - " + squareYEnd);
-		System.out.println("-----------");
+		float squareXStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_X() - 0.5F;
+		float squareYStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_Y() - 0.5F;
+		//float squareXEnd = squareXStart +0.5F;
+		//float squareYEnd = squareYStart +0.5F;
+		float squareXEnd = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_X() + 0.5F;
+		float squareYEnd = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_Y() + 0.5F;
+				
+		//System.out.println(squareXStart + " - " + squareYStart);
+		//System.out.println(squareXEnd + " - " + squareYEnd);
+		//System.out.println("-----------");
 		
 		return LineIntersectsSquare(lineXStart, lineYStart, lineXEnd, lineYEnd, squareXStart, squareYStart, squareXEnd, squareYEnd);
 	}
