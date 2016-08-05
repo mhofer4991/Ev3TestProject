@@ -31,95 +31,99 @@ public class RemoteInputHandler {
 	
 	public void HandleInput(ControlInput input)
 	{
-		switch (input.Code)
+		if (previousInput.Code == input.Code || input.Code == CODE_STOP || previousInput.Code == -1)
 		{
-		// Forward
-		case CODE_FORWARD:
-			if (input.Released)
+			switch (input.Code)
 			{
-				if (previousInput.Code == input.Code)
+			// Forward
+			case CODE_FORWARD:
+				if (input.Released)
 				{
-					listener.StopRobot();
-					
-					previousInput.Code = -1;
+					if (previousInput.Code == input.Code)
+					{
+						listener.StopRobot();
+						
+						previousInput.Code = -1;
+					}
 				}
-			}
-			else
-			{				
-				if (previousInput.Code == -1 || previousInput.Code == input.Code)
+				else
+				{				
+					if (previousInput.Code == -1 || previousInput.Code == input.Code)
+					{
+						listener.DriveRobotForward();
+						
+						previousInput = input;
+					}
+				}
+				break;
+			// Forward
+			case CODE_BACKWARD:
+				if (input.Released)
 				{
-					listener.DriveRobotForward();
-					
-					previousInput = input;
+					if (previousInput.Code == input.Code)
+					{
+						listener.StopRobot();
+						
+						previousInput.Code = -1;
+					}
 				}
-			}
-			break;
-		// Forward
-		case CODE_BACKWARD:
-			if (input.Released)
-			{
-				if (previousInput.Code == input.Code)
+				else
+				{		
+					if (previousInput.Code == -1 || previousInput.Code == input.Code)
+					{
+						listener.DriveRobotBackward();
+						
+						previousInput = input;
+					}
+				}
+				break;
+			// Right
+			case CODE_RIGHT:
+				if (input.Released)
 				{
-					listener.StopRobot();
-					
-					previousInput.Code = -1;
+					if (previousInput.Code == input.Code)
+					{
+						listener.StopRobot();
+						
+						previousInput.Code = -1;
+					}
 				}
-			}
-			else
-			{		
-				if (previousInput.Code == -1 || previousInput.Code == input.Code)
+				else
 				{
-					listener.DriveRobotBackward();
-					
-					previousInput = input;
+					if (previousInput.Code == -1 || previousInput.Code == input.Code)
+					{
+						listener.TurnRobotRight();
+						
+						previousInput = input;
+					}
 				}
-			}
-			break;
-		// Right
-		case CODE_RIGHT:
-			if (input.Released)
-			{
-				if (previousInput.Code == input.Code)
+				break;
+			// Left
+			case CODE_LEFT:
+				if (input.Released)
 				{
-					listener.StopRobot();
-					
-					previousInput.Code = -1;
+					if (previousInput.Code == input.Code)
+					{
+						listener.StopRobot();
+						
+						previousInput.Code = -1;
+					}
 				}
-			}
-			else
-			{
-				if (previousInput.Code == -1 || previousInput.Code == input.Code)
+				else
 				{
-					listener.TurnRobotRight();
-					
-					previousInput = input;
+					if (previousInput.Code == -1 || previousInput.Code == input.Code)
+					{
+						listener.TurnRobotLeft();
+						
+						previousInput = input;
+					}
 				}
-			}
-			break;
-		// Left
-		case CODE_LEFT:
-			if (input.Released)
-			{
-				if (previousInput.Code == input.Code)
-				{
-					listener.StopRobot();
-					
-					previousInput.Code = -1;
-				}
-			}
-			else
-			{
-				if (previousInput.Code == -1 || previousInput.Code == input.Code)
-				{
-					listener.TurnRobotLeft();
-					
-					previousInput = input;
-				}
-			}
-			break;
-		case CODE_STOP:
-			listener.StopRobot();	
-			break;
+				break;
+			case CODE_STOP:
+				listener.StopRobot();	
+				previousInput.Code = -1;
+				break;
+			}	
 		}
 	}
 }

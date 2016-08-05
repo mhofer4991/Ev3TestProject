@@ -27,6 +27,8 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 	
 	public final static byte MSGCODE_ROBOT_STATUS_UPDATE = 5;
 	
+	public final static byte MSGCODE_ROBOT_CALIBRATE_REQUEST = 6;
+	
 	private RemoteControlListener listener;
 	
 	private RemoteInputHandler inputHandler;
@@ -92,9 +94,10 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
                     
                     this.HandleClient(clientSocket);
                 } catch (IOException e) {
-        			this.isConnected = false;
-                	listener.DisconnectedFromRemote();
                 }
+                
+    			this.isConnected = false;
+            	listener.DisconnectedFromRemote();
             }       
             
         	serverSocket.close();     
@@ -111,10 +114,19 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 	 */
 	public void SendRoboStatus(RoboStatus status)
 	{		
-			String data = Helper.GetObjectAsString(status);
-			byte[] bd = data.getBytes();
+		/*String data = Helper.GetObjectAsString(status);
+		byte[] bd = data.getBytes();
 			
-			this.SendData(MSGCODE_ROBOT_STATUS_UPDATE, bd);
+		this.SendData(MSGCODE_ROBOT_STATUS_UPDATE, bd);*/
+		this.SendMessage(MSGCODE_ROBOT_STATUS_UPDATE, status);
+	}
+	
+	public void SendMessage(byte code, Object msg)
+	{
+		String data = Helper.GetObjectAsString(msg);
+		byte[] bd = data.getBytes();
+		
+		this.SendData(code, bd);
 	}
 	
 	private void SendData(byte code, byte[] data)
@@ -138,13 +150,21 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 	private void HandleClient(Socket client) throws IOException
 	{
 		InputStream in = clientSocket.getInputStream();
+		boolean okay = true;
 
-		while (running)
+		while (running && okay)
 		{
 			byte[] code = new byte[1];
 			
+			int result = in.read(code, 0, code.length);
+			
 			// Get code
-			if (in.read(code, 0, code.length) == code.length)
+			if (result < 0)
+			{
+				// It seems that the connection has been closed.
+				okay = false;
+			}
+			else if (result == code.length)
 			{
 				byte[] length = new byte[4];
 				
@@ -170,13 +190,17 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 						}
 					}
 					
-					HandleData(code[0], data);
+					if (!HandleData(code[0], data))
+					{
+						// Handling data was not successful.
+						okay = false;
+					}
 				}
 			}
 		}
 	}
 	
-	private void HandleData(byte code, byte[] data)
+	private boolean HandleData(byte code, byte[] data)
 	{	
 		// Handle data
 		String text = new String(data, StandardCharsets.UTF_8);
@@ -196,11 +220,21 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 			//System.out.println(in.Code);
 			this.HandleControlInput(in);
 		}
+		else if (code == MSGCODE_ROBOT_CALIBRATE_REQUEST)
+		{
+			this.listener.CalibratingRequested();
+		}
+		else
+		{
+			return false;
+		}
+		
+		return true;
 	}
 	
 	private void HandleControlInput(ControlInput input)
 	{
-		System.out.println("msg " + Integer.toString(input.Code) + " " + Boolean.toString(input.Released) + " rcvd");
+		//System.out.println("msg " + Integer.toString(input.Code) + " " + Boolean.toString(input.Released) + " rcvd");
 		
 		this.inputHandler.HandleInput(input);
 	}

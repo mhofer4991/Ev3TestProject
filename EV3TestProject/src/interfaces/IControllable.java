@@ -7,7 +7,7 @@ import lejos.robotics.geometry.Point;
  * @author Markus
  * Interface used for internal logic like driving some distance or turning some degrees.
  */
-public interface Controllable {
+public interface IControllable {
 	void DriveDistanceForward(float distance);
 	void DriveDistanceBackward(float distance);
 	void TurnLeftByDegrees(float degrees);

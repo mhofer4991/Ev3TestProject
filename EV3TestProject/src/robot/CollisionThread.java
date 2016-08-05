@@ -93,7 +93,7 @@ public class CollisionThread extends Thread {
 				
 				if (ultraData[0] < MIN_DISTANCE)
 				{
-					listener.ObstacleDetected(ultraData[0]);
+					//listener.ObstacleDetected(ultraData[0]);
 				}
 				
 				// analyse gyro sensor

@@ -8,7 +8,7 @@ import java.util.Queue;
 import Serialize.RoboStatus;
 import calibrating.CalibratingUtil;
 import interfaces.CollisionListener;
-import interfaces.Controllable;
+import interfaces.IControllable;
 import interfaces.RemoteControlListener;
 import interfaces.RobotStatusListener;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -24,7 +24,7 @@ import lejos.robotics.RegulatedMotorListener;
 import lejos.robotics.geometry.Point;
 import lejos.utility.Delay;
 
-public class Robot implements Controllable, RegulatedMotorListener, CollisionListener, RemoteControlListener {
+public class Robot implements IControllable, RegulatedMotorListener, CollisionListener, RemoteControlListener {
 	private EV3TouchSensor touch;
 	private HiTechnicAccelerometer acc;
 	private EV3UltrasonicSensor ultra;
@@ -52,6 +52,8 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 	
 	// Navigation	
 	private PlannedMovement plannedMove;
+
+	private CalibratingUtil calibratingUtil;
 		
 	public Robot()
 	{
@@ -77,6 +79,8 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 		this.collisionThread.SetListener(this);
 		
 		this.collisionThread.start();
+		
+		this.calibratingUtil = new CalibratingUtil(this.GetDriving(), gyro, ultra);
 	}
 	
 	public Point GetPosition()
@@ -121,6 +125,11 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 		status.Rotation = data[0];
 		
 		return status;
+	}
+	
+	public void Calibrate(int motorDegrees)
+	{
+		this.calibratingUtil.Calibrate(motorDegrees);
 	}
 	
 	//
@@ -359,7 +368,7 @@ public class Robot implements Controllable, RegulatedMotorListener, CollisionLis
 					if (leftDistance < data[0] || data[0] > CollisionThread.MIN_DISTANCE * 2)
 					{
 						// TODO:
-						// This has to change...
+						// Better solution?
 						this.currentMovement = MovementMode.Drive;
 						
 						this.plannedMove = new PlannedMovement(this.currentMovement, leftDistance);

@@ -22,6 +22,7 @@ import lejos.robotics.RegulatedMotor;
 import lejos.robotics.geometry.Point;
 import lejos.utility.Delay;
 import network.RemoteControlServer;
+import robo2016.Manager;
 import robot.Driving;
 import robot.Robot;
 
@@ -108,16 +109,18 @@ public class Program {
 		//drive.TurnRightByDegrees(90, false);
 		
 		Robot ro = new Robot();
-		CalibratingUtil caliu = new CalibratingUtil(ro.GetDriving());
+		//CalibratingUtil caliu = new CalibratingUtil(ro.GetDriving());
 		
-		RemoteControlServer ser = new RemoteControlServer(ro);
+		//RemoteControlServer ser = new RemoteControlServer(ro);
 		//ser.SetListener();
-		ser.start();
+		//ser.start();
 		
-		ro.AddListener(ser);
+		//ro.AddListener(ser);
+		Manager mgr = new Manager(ro);
+		mgr.Start();
 		
-		ro.SetCollisionCheck(true);
-		ro.DriveDistanceForward(2);
+		//ro.SetCollisionCheck(true);
+		//ro.DriveDistanceForward(2);
 		//ro.TurnRightByDegrees(-135);
 		
 		/*ro.DriveToPosition(new Point(0.5F, 0.5F));
