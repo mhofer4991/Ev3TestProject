@@ -19,8 +19,8 @@ public class ScanMap {
 		int minY = startPosition.Get_Y();
 		
 		// TODO: Distanzen in X und Y richtig berechnen
-		int distanceX = (int)(freeDistance * Math.sin(direction));
-		int distanceY = (int)(freeDistance * Math.cos(direction));
+		int distanceX = (int)(freeDistance * Math.sin(Math.toRadians(direction)));
+		int distanceY = (int)(freeDistance * Math.cos(Math.toRadians(direction)));
 		
 		int maxX = (startPosition.Get_X() + distanceX);
 		int maxY = (startPosition.Get_Y() + distanceY);
