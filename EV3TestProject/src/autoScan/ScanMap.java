@@ -59,7 +59,7 @@ public class ScanMap {
 		for (int i = 0; i < this.map.Get_Fields().length; i++)
 		{
 			for (int j = 0; j < this.map.Get_Fields()[0].length; j++)
-			{
+			{				
 				if ((this.LineMeetsField(minX, minY, maxX, maxY, i, j)) && (this.map.Get_Fields()[i][j].Get_State() == Fieldstate.unscanned))
 				{
 					this.map.Get_Fields()[i][j].Set_State(state);
@@ -208,10 +208,14 @@ public class ScanMap {
 	// Checks if a line meets a field
 	public boolean LineMeetsField(float lineXStart, float lineYStart, float lineXEnd, float lineYEnd, int fieldIndexX, int fieldIndexY)
 	{
-		float squareXStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_X();
-		float squareYStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_Y();
+		float squareXStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_X() - 0.25F;
+		float squareYStart = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_Y() - 0.25F;
 		float squareXEnd = squareXStart +1;
 		float squareYEnd = squareYStart +1;
+
+		System.out.println(squareXStart + " - " + squareYStart);
+		System.out.println(squareXEnd + " - " + squareYEnd);
+		System.out.println("-----------");
 		
 		return LineIntersectsSquare(lineXStart, lineYStart, lineXEnd, lineYEnd, squareXStart, squareYStart, squareXEnd, squareYEnd);
 	}
