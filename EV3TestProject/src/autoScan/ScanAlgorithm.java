@@ -80,10 +80,12 @@ public class ScanAlgorithm {
 		while (!this.abort)
 		{
 			// TODO: Current Field auf free&scanned setzen
+			scanMap.map.Get_Fields()[/*Current Robo X*/0][/*CurrentRobo Y*/0].Set_State(Fieldstate.freeScanned);
 			
 			// TODO: Rundumscan bzw.
 			// TODO: Scan in die Richtungen wo unscanned oder free ist
 						
+			
 			// Liste der free Felder
 			ArrayList<Position> freeCells = scanMap.GetAllFreeCells();
 			ArrayList<Position> routeToNextCell = new ArrayList<Position>();				
@@ -107,8 +109,9 @@ public class ScanAlgorithm {
 				}				
 				else
 				{
-					// TODO: Punkt ist nicht erreichbar
-					// Punkt auf unscnnned setzen?
+					// Punkt ist nicht erreichbar
+					// Punkt auf unscnnned setzen
+					scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Set_State(Fieldstate.unscanned);
 				}
 				
 				i++;
@@ -121,6 +124,7 @@ public class ScanAlgorithm {
 			}
 			
 			// TODO: Nächstes freies, ungescanntes Feld anfahren
+			// Route abfahren
 		}		
 	}
 	
