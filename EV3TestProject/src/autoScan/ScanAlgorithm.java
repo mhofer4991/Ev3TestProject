@@ -70,6 +70,8 @@ public class ScanAlgorithm {
 	}
 	
 	public boolean abort;
+	
+	public Position roboPosition;
 
 	public void Scan()
 	{
@@ -79,14 +81,14 @@ public class ScanAlgorithm {
 		
 		while (!this.abort)
 		{
-			// TODO: Current Field auf free&scanned setzen
-			scanMap.map.Get_Fields()[/*Current Robo X*/0][/*CurrentRobo Y*/0].Set_State(Fieldstate.freeScanned);
+			// Current Field auf free&scanned setzen
+			scanMap.map.Get_Fields()[roboPosition.Get_X()][roboPosition.Get_Y()].Set_State(Fieldstate.freeScanned);
 			
-			// TODO: Scan in die Richtungen wo unscanned oder free ist
+			// Scan in die Richtungen wo unscanned oder free ist
 			ArrayList<Integer> directions = new ArrayList<Integer>();
 			for (int i = 0; i < 4; i++)
 			{							
-				if (CheckUnscannd(scanMap.map, /*Current Robo Pos*/new Position(0,0), i))
+				if (CheckUnscannd(scanMap.map, roboPosition, i))
 				{
 					directions.add(i);
 				}
@@ -107,9 +109,9 @@ public class ScanAlgorithm {
 			
 			while (routeToNextCell.size() < 2 && i < freeCells.size())
 			{				
-				// TODO: Route berechnen
+				// Route berechnen
 				ArrayList<Edge> startEnd = new ArrayList<Edge>();
-				Edge route = new Edge(new Position(/* Current Robot Position*/), scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Get_Position());
+				Edge route = new Edge(roboPosition, scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Get_Position());
 				startEnd.add(route);
 				
 				routeToNextCell = PathIO.GetPath(scanMap.map, startEnd, new A_Star()).get(0);
