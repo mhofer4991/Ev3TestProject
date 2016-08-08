@@ -64,31 +64,63 @@ public class ScanAlgorithm {
 		Draw(sm.map);
 	}
 	
+	public static void Draw(Map map)
+	{
+		Field[][] fields =  map.Get_Fields();
+		
+		for (int i = 0; i < fields.length; i++)
+		{
+			for (int j = 0; j < fields[0].length; j++)
+			{
+				
+				String text = fields[i][j].Get_Position().Get_X() + " / " + fields[i][j].Get_Position().Get_Y() + " : " + fields[i][j].Get_State();
+				System.out.println(text);
+				
+				/*				
+				System.out.print(fields[i][j].Get_State().ordinal());
+				*/
+			}
+			
+			System.out.println();
+		}
+		
+		System.out.println();
+		System.out.println();
+	}
+	
+	
+	
+	
 	public ScanAlgorithm(Map map)
 	{
 		this.abort = false;
+		this.scanMap = new ScanMap();
+		this.scanMap.map = map;
 	}
 	
-	public boolean abort;
-	
+	private boolean abort;
+	public ScanMap scanMap;
 	public Position roboPosition;
 
+	public void Abort()
+	{
+		this.abort = true;
+	}
+	
 	public void Scan()
 	{
-		this.abort = false;
-		
-		ScanMap scanMap = new ScanMap();
+		this.abort = false;			
 		
 		while (!this.abort)
 		{
 			// Current Field auf free&scanned setzen
-			scanMap.map.Get_Fields()[roboPosition.Get_X()][roboPosition.Get_Y()].Set_State(Fieldstate.freeScanned);
+			this.scanMap.map.Get_Fields()[roboPosition.Get_X()][roboPosition.Get_Y()].Set_State(Fieldstate.freeScanned);
 			
 			// Scan in die Richtungen wo unscanned oder free ist
 			ArrayList<Integer> directions = new ArrayList<Integer>();
 			for (int i = 0; i < 4; i++)
 			{							
-				if (CheckUnscannd(scanMap.map, roboPosition, i))
+				if (CheckUnscannd(roboPosition, i))
 				{
 					directions.add(i);
 				}
@@ -101,7 +133,7 @@ public class ScanAlgorithm {
 			}
 			
 			// Liste der free Felder
-			ArrayList<Position> freeCells = scanMap.GetAllFreeCells();
+			ArrayList<Position> freeCells = this.scanMap.GetAllFreeCells();
 			ArrayList<Position> routeToNextCell = new ArrayList<Position>();				
 			
 			// Liste der free Felder durchgehen und Route berechnen											
@@ -111,10 +143,10 @@ public class ScanAlgorithm {
 			{				
 				// Route berechnen
 				ArrayList<Edge> startEnd = new ArrayList<Edge>();
-				Edge route = new Edge(roboPosition, scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Get_Position());
+				Edge route = new Edge(roboPosition, this.scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Get_Position());
 				startEnd.add(route);
 				
-				routeToNextCell = PathIO.GetPath(scanMap.map, startEnd, new A_Star()).get(0);
+				routeToNextCell = PathIO.GetPath(this.scanMap.map, startEnd, new A_Star()).get(0);
 				
 				// TChecken ob die Route mind. 2 einträge hat
 				if (routeToNextCell.size() >= 2)
@@ -125,7 +157,7 @@ public class ScanAlgorithm {
 				{
 					// Punkt ist nicht erreichbar
 					// Punkt auf unscnnned setzen
-					scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Set_State(Fieldstate.unscanned);
+					this.scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Set_State(Fieldstate.unscanned);
 				}
 				
 				i++;
@@ -143,7 +175,7 @@ public class ScanAlgorithm {
 	}
 	
 	// Returns a value indicating whether a field needs to be scanned or not.
-	public static boolean CheckUnscannd(Map map, Position pos, Integer direction)
+	public boolean CheckUnscannd(Position pos, Integer direction)
 	{
 		int x;
 		int y;
@@ -174,12 +206,12 @@ public class ScanAlgorithm {
 				throw new IllegalArgumentException();
 		}
 		
-		if ( x < 0 || y < 0 || x >= map.Get_Fields().length || y >= map.Get_Fields()[0].length)
+		if ( x < 0 || y < 0 || x >= this.scanMap.map.Get_Fields().length || y >= this.scanMap.map.Get_Fields()[0].length)
 		{
 			return true;
 		}
 		
-		switch (map.Get_Fields()[x][y].Get_State())
+		switch (this.scanMap.map.Get_Fields()[x][y].Get_State())
 		{
 			case free:
 				return true;
@@ -192,29 +224,5 @@ public class ScanAlgorithm {
 			default:
 				return true;
 		}
-	}
-	
-	public static void Draw(Map map)
-	{
-		Field[][] fields =  map.Get_Fields();
-		
-		for (int i = 0; i < fields.length; i++)
-		{
-			for (int j = 0; j < fields[0].length; j++)
-			{
-				
-				String text = fields[i][j].Get_Position().Get_X() + " / " + fields[i][j].Get_Position().Get_Y() + " : " + fields[i][j].Get_State();
-				System.out.println(text);
-				
-				/*				
-				System.out.print(fields[i][j].Get_State().ordinal());
-				*/
-			}
-			
-			System.out.println();
-		}
-		
-		System.out.println();
-		System.out.println();
-	}	  	
+	}		  	
 }
