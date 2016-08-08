@@ -130,6 +130,11 @@ public class ScanAlgorithm {
 			{
 				// TODO: Scan to direction -> directions[i];
 				// 0 up, 1 right, 2 down, 3 left
+				int direction = 0;
+				int freeDistance = 1;
+				
+				// Scanergebnis einbinden
+				this.scanMap.AddScanResult(direction, freeDistance, roboPosition, Fieldstate.free);
 			}
 			
 			// Liste der free Felder
