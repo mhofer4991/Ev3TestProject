@@ -15,6 +15,9 @@ import java.util.List;
 
 import Serialize.ControlInput;
 import Serialize.RoboStatus;
+import Serialize.Route;
+import Serialize.TravelRequest;
+import Serialize.TravelResponse;
 import interfaces.RemoteControlListener;
 import interfaces.RobotStatusListener;
 import lejos.hardware.lcd.LCD;
@@ -28,6 +31,10 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 	public final static byte MSGCODE_ROBOT_STATUS_UPDATE = 5;
 	
 	public final static byte MSGCODE_ROBOT_CALIBRATE_REQUEST = 6;
+	
+	public final static byte MSGCODE_ROBOT_TRAVEL_ROUTE_REQUEST = 7;
+	
+	public final static byte MSGCODE_ROBOT_TRAVEL_ROUTE_RESPONSE = 8;
 	
 	private RemoteControlListener listener;
 	
@@ -121,6 +128,11 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 		this.SendMessage(MSGCODE_ROBOT_STATUS_UPDATE, status);
 	}
 	
+	public void SendTravelResponse(int id, Route createdRoute)
+	{
+		this.SendMessage(MSGCODE_ROBOT_TRAVEL_ROUTE_RESPONSE, new TravelResponse(id, createdRoute));
+	}
+	
 	public void SendMessage(byte code, Object msg)
 	{
 		String data = Helper.GetObjectAsString(msg);
@@ -130,20 +142,23 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 	}
 	
 	private void SendData(byte code, byte[] data)
-	{		
-		try {
-			ByteBuffer buffer = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN); // ByteOrder.nativeOrder());
-		    buffer.putInt(data.length);
-		    
-			clientSocket.getOutputStream().write(new byte[] { code });
-			clientSocket.getOutputStream().write(buffer.array());
-			clientSocket.getOutputStream().write(data);
-			
-		} catch (IOException e) {
-			this.isConnected = false;
-        	listener.DisconnectedFromRemote();
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	{
+		if (this.clientSocket != null)
+		{
+			try {
+				ByteBuffer buffer = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN); // ByteOrder.nativeOrder());
+			    buffer.putInt(data.length);
+			    
+				clientSocket.getOutputStream().write(new byte[] { code });
+				clientSocket.getOutputStream().write(buffer.array());
+				clientSocket.getOutputStream().write(data);
+				
+			} catch (IOException e) {
+				this.isConnected = false;
+	        	listener.DisconnectedFromRemote();
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -223,6 +238,12 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 		else if (code == MSGCODE_ROBOT_CALIBRATE_REQUEST)
 		{
 			this.listener.CalibratingRequested();
+		}
+		else if (code == MSGCODE_ROBOT_TRAVEL_ROUTE_REQUEST)
+		{
+			TravelRequest request = Helper.GetObjectFromString(text, TravelRequest.class);
+			
+			this.listener.TravelRouteRequested(request);
 		}
 		else
 		{

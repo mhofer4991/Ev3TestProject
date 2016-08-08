@@ -75,7 +75,11 @@ public class ScanMap {
 		{
 			for (int j = 0; j < this.map.Get_Fields()[0].length; j++)
 			{				
-				if ((this.LineMeetsField(minX, minY, maxX, maxY, i, j)) && (this.map.Get_Fields()[i][j].Get_State() == Fieldstate.unscanned))
+				if ((this.LineMeetsField(
+						(float)minX + 0.5F, 
+						(float)minY + 0.5F,
+						(float)maxX + 0.5F,
+						(float)maxY + 0.5F, i, j)) && (this.map.Get_Fields()[i][j].Get_State() == Fieldstate.unscanned))
 				{
 					this.map.Get_Fields()[i][j].Set_State(state);
 				}

@@ -1,5 +1,9 @@
 package interfaces;
 
+import Serialize.Map;
+import Serialize.Route;
+import Serialize.TravelRequest;
+
 public interface RemoteControlListener {
 	// Connection handling
 	void ConnectedToRemote();
@@ -7,6 +11,7 @@ public interface RemoteControlListener {
 	
 	// 
 	void CalibratingRequested();
+	void TravelRouteRequested(TravelRequest request);
 	
 	// Remote controlling the robot
 	void DriveRobotForward();

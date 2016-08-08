@@ -225,7 +225,7 @@ public class A_Star implements IPath{
 
      private boolean FieldIsFree(int x, int y, Map map)
      {
-         if (map.Get_Fields()[x][y].Get_State() != Fieldstate.occupied || map.Get_Fields()[x][y].Get_State() != Fieldstate.unscanned)
+         if (map.Get_Fields()[x][y].Get_State() != Fieldstate.occupied && map.Get_Fields()[x][y].Get_State() != Fieldstate.unscanned)
          {
              return true;
          }

@@ -5,12 +5,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import Serialize.Map;
 import Serialize.RoboStatus;
+import Serialize.Route;
 import calibrating.CalibratingUtil;
 import interfaces.CollisionListener;
 import interfaces.IControllable;
 import interfaces.RemoteControlListener;
 import interfaces.RobotStatusListener;
+import Serialize.TravelRequest;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.hardware.port.SensorPort;
@@ -477,6 +480,12 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 
 	@Override
 	public void CalibratingRequested() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void TravelRouteRequested(Serialize.TravelRequest request) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -1,5 +1,8 @@
 package Serialize;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Map {
 
     private Field[][] Fields;
@@ -32,5 +35,33 @@ public class Map {
 	public Position GetRelatives(int x, int y)
 	{
 		return this.Fields[x][y].Get_Position();
+	}
+	
+	public List<Position> ConvertFromRelativeToArrayPositions(List<Position> positions)
+	{
+		List<Position> converted = new ArrayList<Position>();
+		
+		for (Position pos : positions)
+		{
+			Position n = this.GetIndex(pos.Get_X(), pos.Get_Y());
+			
+			converted.add(n);
+		}
+		
+		return converted;
+	}
+	
+	public List<Position> ConvertFromArrayToRelativePositions(List<Position> positions)
+	{
+		List<Position> converted = new ArrayList<Position>();
+        
+        for (Position pos : positions)
+        {
+        	Position n = this.GetRelatives(pos.Get_X(), pos.Get_Y());
+        	
+        	converted.add(n);
+        }
+		
+		return converted;
 	}
 }

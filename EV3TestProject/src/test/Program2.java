@@ -38,7 +38,7 @@ public class Program2 {
 
         DrawMap(map);
                 
-        map.AddScanResult(315, 5, new Position(0,0), Fieldstate.freeScanned);
+        map.AddScanResult(0,3, new Position(0,0), Fieldstate.freeScanned);
         System.out.println("-----");
         /*System.out.println(map.LineMeetsField(0, 1, 0, -1, 3, 3));
         System.out.println(map.LineMeetsField(0, 1, 0, -1, 2, 2));
