@@ -14,10 +14,7 @@ public class ScanMap {
 	
 	// Adds the state of the scanresult to all fields
 	public void AddScanResult(float direction, float freeDistance, Position startPosition, Fieldstate state)
-	{
-		int minX = startPosition.Get_X();
-		int minY = startPosition.Get_Y();
-		
+	{		
 		direction -= 90;
 		
 		// Distanzen in X und Y richtig berechnen
