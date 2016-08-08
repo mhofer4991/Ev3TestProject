@@ -10,7 +10,7 @@ public class ScanMap {
 		this.map = new Map();
 	}
 	
-	public Map map;
+	public Map map;	
 	
 	// Adds the state of the scanresult to all fields
 	public void AddScanResult(float direction, float freeDistance, Position startPosition, Fieldstate state)
@@ -20,12 +20,22 @@ public class ScanMap {
 		
 		direction -= 90;
 		
-		// TODO: Distanzen in X und Y richtig berechnen
+		// Distanzen in X und Y richtig berechnen
 		int distanceX = (int)(freeDistance * Math.sin(Math.toRadians(direction)));
 		int distanceY = (int)(freeDistance * Math.cos(Math.toRadians(direction)));
 		
 		int maxX = (startPosition.Get_X() + distanceX);
 		int maxY = (startPosition.Get_Y() + distanceY);
+		
+		this.AddScanResult(startPosition, new Position(maxX, maxY), state);
+	}
+	
+	public void AddScanResult(Position startPosition, Position endPosition, Fieldstate state)
+	{
+		int minX = startPosition.Get_X();
+		int minY = startPosition.Get_Y();
+		int maxX = endPosition.Get_X();
+		int maxY = endPosition.Get_Y();
 				
 		// Checken um wieviel das Array zu klein ist	
 		// Differenz zwischen größtem x und y bei scan und array		
@@ -62,7 +72,7 @@ public class ScanMap {
 		maxX -= 0.5F;
 		maxY -= 0.5F;
 		
-		// TODO: Alle gescannten Zellen auf free setzen
+		// Alle gescannten Zellen auf free setzen
 		// Alle Zellen durchgehen, und die die gescannt wurden(Linie geht durch) auf free setzen
 		for (int i = 0; i < this.map.Get_Fields().length; i++)
 		{
@@ -82,7 +92,7 @@ public class ScanMap {
 	{
 		ArrayList<Position> freeCells = new ArrayList<Position>();
 		
-		// TODO: Freie Zellen in diese Liste geben.
+		// Freie Zellen in diese Liste geben.
 		for (int i = 0; i < this.map.Get_Fields().length; i++)
 		{
 			for (int j = 0; j < this.map.Get_Fields()[0].length; j++)

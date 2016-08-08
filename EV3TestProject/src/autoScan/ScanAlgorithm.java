@@ -107,7 +107,7 @@ public class ScanAlgorithm {
 			
 			while (routeToNextCell.size() < 2 && i < freeCells.size())
 			{				
-				// Route berechnen
+				// TODO: Route berechnen
 				ArrayList<Edge> startEnd = new ArrayList<Edge>();
 				Edge route = new Edge(new Position(/* Current Robot Position*/), scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Get_Position());
 				startEnd.add(route);
