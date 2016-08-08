@@ -9,13 +9,6 @@ public class Route {
     {
         this.Points = route;
     }
-    
-    public Route(Position Start, Position End)
-    {
-    	this.Points = new ArrayList<Position>();
-    	this.Points.add(Start);
-    	this.Points.add(End);
-    }
 
     private List<Position> Points;
 	
@@ -27,15 +20,5 @@ public class Route {
 	public void Set_Route(List<Position> route)
 	{
 		this.Points = route;
-	}
-	
-	public Position Start()
-	{
-		return this.Points.get(0);
-	}
-	
-	public Position End()
-	{
-		return this.Points.get(this.Points.size()-1);
 	}
 }

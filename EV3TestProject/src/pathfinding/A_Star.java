@@ -6,7 +6,6 @@ import Serialize.*;
 
 import Serialize.Map;
 import Serialize.Position;
-import Serialize.Route;
 
 public class A_Star implements IPath{
 	
@@ -32,7 +31,7 @@ public class A_Star implements IPath{
      }
 
      @Override
-     public ArrayList<Position> PathFinder(Route route, Map map)
+     public ArrayList<Position> PathFinder(Edge route, Map map)
      {
          ResetFieldValues(map);
                      
@@ -159,7 +158,7 @@ public class A_Star implements IPath{
          return this.Path;
      }
 
-     private void HighlightPath(Route route, Map map)
+     private void HighlightPath(Edge route, Map map)
      {
          this.Path = new ArrayList<Position>();
 

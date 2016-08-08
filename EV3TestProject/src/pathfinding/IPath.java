@@ -5,5 +5,5 @@ import Serialize.*;
 
 public interface IPath {
 
-	ArrayList<Position> PathFinder(Route route, Map map);		
+	ArrayList<Position> PathFinder(Edge route, Map map);		
 }
