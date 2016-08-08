@@ -82,9 +82,21 @@ public class ScanAlgorithm {
 			// TODO: Current Field auf free&scanned setzen
 			scanMap.map.Get_Fields()[/*Current Robo X*/0][/*CurrentRobo Y*/0].Set_State(Fieldstate.freeScanned);
 			
-			// TODO: Rundumscan bzw.
 			// TODO: Scan in die Richtungen wo unscanned oder free ist
-						
+			ArrayList<Integer> directions = new ArrayList<Integer>();
+			for (int i = 0; i < 4; i++)
+			{							
+				if (CheckUnscannd(scanMap.map, /*Current Robo Pos*/new Position(0,0), i))
+				{
+					directions.add(i);
+				}
+			}
+			
+			for (int i = 0; i < directions.size(); i++)
+			{
+				// TODO: Scan to direction -> directions[i];
+				// 0 up, 1 right, 2 down, 3 left
+			}
 			
 			// Liste der free Felder
 			ArrayList<Position> freeCells = scanMap.GetAllFreeCells();
@@ -126,6 +138,58 @@ public class ScanAlgorithm {
 			// TODO: Nächstes freies, ungescanntes Feld anfahren
 			// Route abfahren
 		}		
+	}
+	
+	// Returns a value indicating whether a field needs to be scanned or not.
+	public static boolean CheckUnscannd(Map map, Position pos, Integer direction)
+	{
+		int x;
+		int y;
+		
+		switch (direction)
+		{
+			// up
+			case 0:
+				x = pos.Get_X();
+				y = pos.Get_Y() + 1;
+				break;
+			// right
+			case 1:
+				x = pos.Get_X() + 1;
+				y = pos.Get_Y();
+				break;
+			// down
+			case 2:
+				x = pos.Get_X();
+				y = pos.Get_Y() - 1;
+				break;
+			// left
+			case 3:
+				x = pos.Get_X() - 1;
+				y = pos.Get_Y();
+				break;				
+			default:
+				throw new IllegalArgumentException();
+		}
+		
+		if ( x < 0 || y < 0 || x >= map.Get_Fields().length || y >= map.Get_Fields()[0].length)
+		{
+			return true;
+		}
+		
+		switch (map.Get_Fields()[x][y].Get_State())
+		{
+			case free:
+				return true;
+			case freeScanned:
+				return false;
+			case unscanned:
+				return true;
+			case occupied:
+				return false;	
+			default:
+				return true;
+		}
 	}
 	
 	public static void Draw(Map map)
