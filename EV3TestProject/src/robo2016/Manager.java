@@ -20,6 +20,7 @@ import pathfinding.IPath;
 import pathfinding.PathAlgorithm;
 import pathfinding.PathIO;
 import robot.Robot;
+import robot.TravelThread;
 
 public class Manager implements RemoteControlListener, RobotStatusListener {
 	private Robot managedRobot;
@@ -29,6 +30,10 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
 	private ScanMap scannedMap;
 	
 	private Point lastRobotPosition;
+	
+	private float cellStep = 0.5F;
+	
+	private TravelThread travelThread;
 	
 	public Manager(Robot managedRobot)
 	{
@@ -137,17 +142,45 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
 
 		// Convert from relative coordinates to array indices 
 		// to make them ready for the a star algorithm
-		List<Position> converted = request.TravelledMap.ConvertFromRelativeToArrayPositions(request.TravelledRoute.Get_Route());
+		List<Position> convertedToIndex = request.TravelledMap.ConvertFromRelativeToArrayPositions(request.TravelledRoute.Get_Route());
 		
         IPath path = PathAlgorithm.A_Star();
-        List<Position> calc = PathIO.CalculatePath(request.TravelledMap, new Route(converted), path);
+        List<Position> calc = PathIO.CalculatePath(request.TravelledMap, new Route(convertedToIndex), path);
         
         // Convert them back to relative coordinates
-        List<Position> bconverted = request.TravelledMap.ConvertFromArrayToRelativePositions(calc);
+        List<Position> convertedToRelative = request.TravelledMap.ConvertFromArrayToRelativePositions(calc);
         
-        this.remoteServer.SendTravelResponse(request.ID, new Route(bconverted));
+        this.remoteServer.SendTravelResponse(request.ID, new Route(convertedToRelative));
         
-        if (!bconverted.isEmpty())
+        // Convert relative coordinates to absolute coordinates (1 -> 50cm for example)
+        List<Point> convertedToAbsolute = new ArrayList<Point>();
+        
+        for (Position pos : convertedToRelative)
+        {
+        	Point n = new Point((float)pos.Get_X() * cellStep, (float)pos.Get_Y() * cellStep);
+        	
+        	convertedToAbsolute.add(n);
+        }
+
+        if (this.travelThread != null)
+        {
+	    	try {
+	            if (this.travelThread.IsRunning())
+	            {
+	            	this.travelThread.CancelRoute();
+	            	this.travelThread.interrupt();
+					this.travelThread.join();
+	            }
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+        
+        this.travelThread = new TravelThread(this.managedRobot, convertedToAbsolute);
+        this.travelThread.start();
+        
+        /*if (!bconverted.isEmpty())
         {
             while (true)
             {
@@ -157,6 +190,6 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
                 	this.managedRobot.DriveToPosition(n);
                 }
             }
-        }
+        }*/
 	}
 }
