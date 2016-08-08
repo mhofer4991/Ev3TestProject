@@ -38,23 +38,26 @@ public class Program2 {
 
         DrawMap(map);
                 
-        map.AddScanResult(0,3, new Position(0,0), Fieldstate.freeScanned);
+        //map.AddScanResult(45,3, new Position(0,0), Fieldstate.freeScanned);
+        map.AddScanResult(new Position(-1, 2), new Position(-2,2), Fieldstate.freeScanned);
         System.out.println("-----");
         /*System.out.println(map.LineMeetsField(0, 1, 0, -1, 3, 3));
         System.out.println(map.LineMeetsField(0, 1, 0, -1, 2, 2));
         System.out.println(map.LineMeetsField(0, 1, 0, -1, 3, 2));
         System.out.println(map.LineMeetsField(0, 1, 0, -1, 2, 3));*/
         
+        System.out.println(Math.round(0.45F));
+        
         DrawMap(map);   
 	}
 	
 	public static void DrawMap(ScanMap map)
 	{
-		for (int i = 0; i < map.map.Get_Fields().length; i++)
+		for (int i = 0; i < map.map.Get_Fields()[0].length; i++)
 		{
-			for (int j = 0; j < map.map.Get_Fields()[i].length; j++)
+			for (int j = 0; j < map.map.Get_Fields().length; j++)
 			{
-				System.out.print(map.map.Get_Fields()[i][j].Get_State().ordinal() + " ");
+				System.out.print(map.map.Get_Fields()[j][i].Get_State().ordinal() + " ");
 			}
 			System.out.println();
 		}

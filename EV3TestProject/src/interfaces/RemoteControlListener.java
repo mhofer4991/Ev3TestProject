@@ -17,6 +17,8 @@ public interface RemoteControlListener {
 	void DriveRobotForward();
 	void DriveRobotBackward();
 	void TurnRobotLeft();
+	void TurnRobotLeft(float degrees);
 	void TurnRobotRight();
+	void TurnRobotRight(float degrees);
 	void StopRobot();
 }

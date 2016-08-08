@@ -489,4 +489,16 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public void TurnRobotLeft(float degrees) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void TurnRobotRight(float degrees) {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import Serialize.ControlInput;
+import Serialize.Map;
 import Serialize.RoboStatus;
 import Serialize.Route;
 import Serialize.TravelRequest;
@@ -35,6 +36,8 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 	public final static byte MSGCODE_ROBOT_TRAVEL_ROUTE_REQUEST = 7;
 	
 	public final static byte MSGCODE_ROBOT_TRAVEL_ROUTE_RESPONSE = 8;
+	
+	public final static byte MSGCODE_ROBOT_SCAN_MAP_UPDATE = 9;
 	
 	private RemoteControlListener listener;
 	
@@ -131,6 +134,11 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 	public void SendTravelResponse(int id, Route createdRoute)
 	{
 		this.SendMessage(MSGCODE_ROBOT_TRAVEL_ROUTE_RESPONSE, new TravelResponse(id, createdRoute));
+	}
+	
+	public void SendMapUpdate(Map map)
+	{
+		this.SendMessage(MSGCODE_ROBOT_SCAN_MAP_UPDATE, map);
 	}
 	
 	public void SendMessage(byte code, Object msg)

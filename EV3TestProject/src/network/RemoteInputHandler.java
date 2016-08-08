@@ -21,17 +21,29 @@ public class RemoteInputHandler {
 	public RemoteInputHandler(RemoteControlListener listener)
 	{
 		this.listener = listener;
-		this.previousInput = new ControlInput(-1, false);
+		this.previousInput = new ControlInput(-1, false, false, 0);
 	}
 	
 	public void Reset()
 	{
-		this.previousInput = new ControlInput(-1, false);
+		this.previousInput = new ControlInput(-1, false, false, 0);
 	}
 	
 	public void HandleInput(ControlInput input)
 	{
-		if (previousInput.Code == input.Code || input.Code == CODE_STOP || previousInput.Code == -1)
+		if (input.UseValue)
+		{
+			switch (input.Code)
+			{
+			case CODE_LEFT:
+				listener.TurnRobotLeft(input.Value);
+				break;
+			case CODE_RIGHT:
+				listener.TurnRobotRight(input.Value);
+				break;
+			}
+		}
+		else if (previousInput.Code == input.Code || input.Code == CODE_STOP || previousInput.Code == -1)
 		{
 			switch (input.Code)
 			{

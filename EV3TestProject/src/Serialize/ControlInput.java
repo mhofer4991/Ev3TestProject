@@ -5,9 +5,15 @@ public class ControlInput {
 	
 	public boolean Released;
 	
-	public ControlInput(int code, boolean released)
+	public boolean UseValue;
+	
+	public float Value;
+	
+	public ControlInput(int code, boolean released, boolean useValue, float value)
 	{
 		this.Code = code;
 		this.Released = released;
+		this.UseValue = useValue;
+		this.Value = value;
 	}
 }

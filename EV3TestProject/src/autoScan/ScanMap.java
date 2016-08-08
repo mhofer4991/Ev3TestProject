@@ -8,6 +8,13 @@ public class ScanMap {
 	public ScanMap()
 	{
 		this.map = new Map();
+		
+		Field[][] init = new Field[1][1];
+		
+		init[0][0] = new Field(0, 0);
+		init[0][0].Set_State(Fieldstate.freeScanned);
+		
+		this.map.Set_Fields(init);
 	}
 	
 	public Map map;	
@@ -15,7 +22,7 @@ public class ScanMap {
 	// Adds the state of the scanresult to all fields
 	public void AddScanResult(float direction, float freeDistance, Position startPosition, Fieldstate state)
 	{		
-		direction -= 90;
+		//direction -= 90;
 		
 		// Distanzen in X und Y richtig berechnen
 		int distanceX = (int)(freeDistance * Math.sin(Math.toRadians(direction)));
@@ -29,10 +36,10 @@ public class ScanMap {
 	
 	public void AddScanResult(Position startPosition, Position endPosition, Fieldstate state)
 	{
-		int minX = startPosition.Get_X();
-		int minY = startPosition.Get_Y();
-		int maxX = endPosition.Get_X();
-		int maxY = endPosition.Get_Y();
+		int minX = Math.min(startPosition.Get_X(), endPosition.Get_X());
+		int minY = Math.min(startPosition.Get_Y(), endPosition.Get_Y());
+		int maxX = Math.max(startPosition.Get_X(), endPosition.Get_X());
+		int maxY = Math.max(startPosition.Get_Y(), endPosition.Get_Y());
 				
 		// Checken um wieviel das Array zu klein ist	
 		// Differenz zwischen größtem x und y bei scan und array		
@@ -44,31 +51,31 @@ public class ScanMap {
 		
 		// Array entsprechend vergrößern
 		// mittels differnz entsprechend vergrößern		
-		if (posX > 0)
-		{
-			this.Extend(0, posX);
-		}
-		
 		if (posY > 0)
 		{
-			this.Extend(1, posY);
+			this.Extend(0, posY);
 		}
 		
-		if (negX > 0)
+		if (posX > 0)
 		{
-			this.Extend(2, negX);
+			this.Extend(1, posX);
 		}
 		
 		if (negY > 0)
 		{
-			this.Extend(3, negY);
+			this.Extend(2, negY);
 		}
 		
-		minX -= 0.5F;
-		minY -= 0.5F;
-		maxX -= 0.5F;
-		maxY -= 0.5F;
+		if (negX > 0)
+		{
+			this.Extend(3, negX);
+		}
 		
+		//minX -= 0.5F;
+		//minY -= 0.5F;
+		//maxX -= 0.5F;
+		//maxY -= 0.5F;
+				
 		// Alle gescannten Zellen auf free setzen
 		// Alle Zellen durchgehen, und die die gescannt wurden(Linie geht durch) auf free setzen
 		for (int i = 0; i < this.map.Get_Fields().length; i++)
@@ -76,10 +83,10 @@ public class ScanMap {
 			for (int j = 0; j < this.map.Get_Fields()[0].length; j++)
 			{				
 				if ((this.LineMeetsField(
-						(float)minX + 0.5F, 
-						(float)minY + 0.5F,
-						(float)maxX + 0.5F,
-						(float)maxY + 0.5F, i, j)) && (this.map.Get_Fields()[i][j].Get_State() == Fieldstate.unscanned))
+						(float)startPosition.Get_X() + 0.5F, 
+						(float)startPosition.Get_Y() + 0.5F,
+						(float)endPosition.Get_X() + 0.5F,
+						(float)endPosition.Get_Y() + 0.5F, i, j)) && (this.map.Get_Fields()[i][j].Get_State() == Fieldstate.unscanned))
 				{
 					this.map.Get_Fields()[i][j].Set_State(state);
 				}
@@ -233,11 +240,15 @@ public class ScanMap {
 		//float squareYEnd = squareYStart +0.5F;
 		float squareXEnd = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_X() + 1; // + 0.5F;
 		float squareYEnd = this.map.Get_Fields()[fieldIndexX][fieldIndexY].Get_Position().Get_Y() + 1; // 0.5F;
-				
-		//System.out.println(squareXStart + " - " + squareYStart);
-		//System.out.println(squareXEnd + " - " + squareYEnd);
-		//System.out.println("-----------");
-		
+
+		/*System.out.println(lineXStart + " - " + lineYStart);
+		System.out.println(lineXEnd + " - " + lineYEnd);
+		System.out.println("ddddddddddd");
+		System.out.println(squareXStart + " - " + squareYStart);
+		System.out.println(squareXEnd + " - " + squareYEnd);
+
+		System.out.println(LineIntersectsSquare(lineXStart, lineYStart, lineXEnd, lineYEnd, squareXStart, squareYStart, squareXEnd, squareYEnd));
+		System.out.println("-----------");*/
 		return LineIntersectsSquare(lineXStart, lineYStart, lineXEnd, lineYEnd, squareXStart, squareYStart, squareXEnd, squareYEnd);
 	}
 	

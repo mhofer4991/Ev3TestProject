@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import Serialize.Field;
+import Serialize.Fieldstate;
 import Serialize.Map;
 import Serialize.Position;
 import Serialize.RoboStatus;
@@ -27,10 +28,13 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
 	
 	private ScanMap scannedMap;
 	
+	private Point lastRobotPosition;
+	
 	public Manager(Robot managedRobot)
 	{
 		this.managedRobot = managedRobot;
 		this.managedRobot.AddListener(this);
+		this.lastRobotPosition = this.managedRobot.GetPosition();
 		
 		this.remoteServer = new RemoteControlServer(this);
 		
@@ -54,6 +58,19 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
 	@Override
 	public void RobotStatusUpdated(RoboStatus status) {
 		this.remoteServer.SendRoboStatus(managedRobot.GetStatus());
+		
+		Position start = new Position((int)(Math.round(this.lastRobotPosition.x / 0.5F)), (int)(Math.round(this.lastRobotPosition.y / 0.5F)));
+		Position end = new Position((int)(Math.round(status.X / 0.5F)), (int)(Math.round(status.Y / 0.5F)));
+		
+		System.out.println(status.X + " - " + status.Y);
+		System.out.println(start.Get_X() + " - " + start.Get_Y());
+		System.out.println(end.Get_X() + " - " + end.Get_Y());
+		
+		this.scannedMap.AddScanResult(start, end, Fieldstate.freeScanned);
+		
+		this.remoteServer.SendMapUpdate(scannedMap.map);
+		
+		this.lastRobotPosition = new Point(status.X, status.Y);
 	}
 	
 	//
@@ -93,8 +110,18 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
 	}
 
 	@Override
+	public void TurnRobotLeft(float degrees) {
+		this.managedRobot.TurnLeftByDegrees(degrees);
+	}
+
+	@Override
 	public void TurnRobotRight() {
 		this.managedRobot.TurnRight();
+	}
+
+	@Override
+	public void TurnRobotRight(float degrees) {
+		this.managedRobot.TurnRightByDegrees(degrees);
 	}
 
 	@Override
@@ -120,10 +147,16 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
         
         this.remoteServer.SendTravelResponse(request.ID, new Route(bconverted));
         
-        for (Position pos : bconverted)
+        if (!bconverted.isEmpty())
         {
-        	Point n = new Point((float)pos.Get_X() * 0.5F, (float)pos.Get_Y() * 0.5F);
-        	this.managedRobot.DriveToPosition(n);
+            while (true)
+            {
+                for (Position pos : bconverted)
+                {
+                	Point n = new Point((float)pos.Get_X() * 0.5F, (float)pos.Get_Y() * 0.5F);
+                	this.managedRobot.DriveToPosition(n);
+                }
+            }
         }
 	}
 }
