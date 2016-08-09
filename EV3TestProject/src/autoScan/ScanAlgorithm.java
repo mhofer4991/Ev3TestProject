@@ -1,7 +1,6 @@
 package autoScan;
 
 import java.util.ArrayList;
-
 import Serialize.*;
 import pathfinding.*;
 
@@ -96,12 +95,15 @@ public class ScanAlgorithm {
 		this.abort = false;
 		this.scanMap = new ScanMap();
 		this.scanMap.map = map;
+		
 	}
 	
 	private boolean abort;
 	public ScanMap scanMap;
 	public Position roboPosition;
 
+	
+	
 	public void Abort()
 	{
 		this.abort = true;
@@ -128,13 +130,19 @@ public class ScanAlgorithm {
 			
 			for (int i = 0; i < directions.size(); i++)
 			{
-				// TODO: Scan to direction -> directions[i];
+				// Scan to direction -> directions[i];
 				// 0 up, 1 right, 2 down, 3 left
-				int direction = 0;
+				int direction = 90 * i;
+				
+				// TODO: RotateTo Degrees
+				
+				// TODO: Scanresult from brick
 				int freeDistance = 1;
 				
 				// Scanergebnis einbinden
 				this.scanMap.AddScanResult(direction, freeDistance, roboPosition, Fieldstate.free);
+				
+				// TODO: Manager benachrichtigen
 			}
 			
 			// Liste der free Felder
@@ -176,6 +184,8 @@ public class ScanAlgorithm {
 			
 			// TODO: Nächstes freies, ungescanntes Feld anfahren
 			// Route abfahren
+				
+			
 		}		
 	}
 	
