@@ -13,12 +13,15 @@ public class TravelThread extends Thread {
 	
 	private boolean running;
 	
+	private boolean repeat;
+	
 	private Point currentDestination;
 	
-	public TravelThread(IControllable controllable, List<Point> route)
+	public TravelThread(IControllable controllable, List<Point> route, boolean repeat)
 	{
 		this.controllable = controllable;
 		this.route = route;
+		this.repeat = repeat;
 		
 		this.running = false;
 		this.currentDestination = null;
@@ -45,7 +48,7 @@ public class TravelThread extends Thread {
 	{
 		this.running = true;
 		
-		while (this.running)
+		do
 		{
 			for (Point pos : route)
             {
@@ -54,5 +57,6 @@ public class TravelThread extends Thread {
             	this.controllable.DriveToPosition(pos);
             }
 		}
+		while (this.running && this.repeat);
 	}
 }

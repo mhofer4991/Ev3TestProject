@@ -489,7 +489,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		{
 			this.Stop();
 			
-			this.DriveDistanceBackward(0.15F);
+			//this.DriveDistanceBackward(0.15F);
 		}
 	}
 }

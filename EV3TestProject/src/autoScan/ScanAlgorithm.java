@@ -7,12 +7,13 @@ import Serialize.*;
 import pathfinding.*;
 import interfaces.*;
 
-public class ScanAlgorithm {
-	public ScanAlgorithm(Map map, IAlgorithmHelper roboInfo)
+public class ScanAlgorithm extends Thread {
+	public ScanAlgorithm(ScanMap scanMap, IAlgorithmHelper roboInfo)
 	{
 		this.abort = false;
-		this.scanMap = new ScanMap();
-		this.scanMap.map = map;
+		//this.scanMap = new ScanMap();
+		//this.scanMap.map = map;
+		this.scanMap = scanMap;
 		this.roboInfo = roboInfo;
 	}
 		
@@ -29,6 +30,12 @@ public class ScanAlgorithm {
 	public void Abort()
 	{
 		this.abort = true;
+	}
+	
+	@Override
+	public void run()
+	{
+		this.Scan();
 	}
 	
 	public void Scan()

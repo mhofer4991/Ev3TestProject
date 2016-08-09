@@ -16,6 +16,7 @@ import interfaces.RobotStatusListener;
 import lejos.robotics.geometry.Point;
 import Serialize.TravelRequest;
 import Serialize.TravelResponse;
+import autoScan.ScanAlgorithm;
 import autoScan.ScanMap;
 import network.RemoteControlServer;
 import pathfinding.IPath;
@@ -43,6 +44,13 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	
 	private boolean isConnectedToRemote;
 	
+	// Manager properties
+	
+	private ManagerState currentState;
+	
+	// Scan algorithm
+	private ScanAlgorithm autoScanAlgorithm;
+	
 	public Manager(Robot managedRobot)
 	{
 		this.managedRobot = managedRobot;
@@ -52,6 +60,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		this.remoteServer = new RemoteControlServer(this);
 		
 		this.scannedMap = new ScanMap();
+		this.currentState = ManagerState.Idle;
 	}
 	
 	public void Start()
@@ -75,20 +84,39 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		// check if manual or automatic
 		// if manual calculate start end and add it to scanned map
 		// if automatic notify automatic scan algorithm
-		this.remoteServer.SendRoboStatus(managedRobot.GetStatus());
 		
-		Position start = new Position((int)(Math.round(this.lastRobotPosition.x / 0.5F)), (int)(Math.round(this.lastRobotPosition.y / 0.5F)));
-		Position end = new Position((int)(Math.round(status.X / 0.5F)), (int)(Math.round(status.Y / 0.5F)));
-		
-		if (Math.sqrt(Math.pow(start.Get_X() - end.Get_X(), 2) + Math.pow(start.Get_Y() - end.Get_Y(), 2)) > 0)
+		if (this.isConnectedToRemote)
 		{
-			System.out.println(status.X + " - " + status.Y);
-			System.out.println(start.Get_X() + " - " + start.Get_Y());
-			System.out.println(end.Get_X() + " - " + end.Get_Y());
+			this.remoteServer.SendRoboStatus(managedRobot.GetStatus());
+		}
+		
+		if (this.currentState == ManagerState.ManualScan)
+		{
+			// In manual mode we track each position change 
+			// and add it to the map
+			Position start = new Position((int)(Math.round(this.lastRobotPosition.x / cellStep)), (int)(Math.round(this.lastRobotPosition.y / cellStep)));
+			Position end = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
 			
-			this.scannedMap.AddScanResult(start, end, Fieldstate.freeScanned);
+			if (Math.sqrt(Math.pow(start.Get_X() - end.Get_X(), 2) + Math.pow(start.Get_Y() - end.Get_Y(), 2)) > 0)
+			{
+				System.out.println(status.X + " - " + status.Y);
+				System.out.println(start.Get_X() + " - " + start.Get_Y());
+				System.out.println(end.Get_X() + " - " + end.Get_Y());
+				
+				this.scannedMap.AddScanResult(start, end, Fieldstate.freeScanned);
+				
+				this.remoteServer.SendMapUpdate(scannedMap.map);
+			}
+		}
+		else if (this.currentState == ManagerState.AutoScan)
+		{
+			// Notify algorithm
+			Position pos = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
 			
-			this.remoteServer.SendMapUpdate(scannedMap.map);
+			if (this.autoScanAlgorithm != null)
+			{
+				this.autoScanAlgorithm.UpdateRoboPosition(pos);
+			}
 		}
 		
 		this.lastRobotPosition = new Point(status.X, status.Y);
@@ -107,30 +135,76 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	public void DisconnectedFromRemote() {
 		this.isConnectedToRemote = true;
 	}
+	
+	// Scan modes
 
 	@Override
 	public void ManualScanModeStarted() {
-		// TODO Auto-generated method stub
+		this.currentState = ManagerState.ManualScan;
 		
+		System.out.println("manual start");
+		
+		// Reset map?????
+		this.managedRobot.SetCollisionCheck(false);
 	}
 
 	@Override
 	public void ManualScanModeExited() {
-		// TODO Auto-generated method stub
+		this.currentState = ManagerState.Idle;
 		
+		System.out.println("manual exit");
+		
+		this.managedRobot.Stop();
 	}
 
 	@Override
 	public void AutomaticScanModeStarted() {
-		// TODO Auto-generated method stub
+		this.currentState = ManagerState.AutoScan;
 		
+		System.out.println("auto start");
+		
+		// Reset map?????
+		this.managedRobot.SetCollisionCheck(true);
+		
+		this.autoScanAlgorithm = new ScanAlgorithm(this.scannedMap, this);
+		
+		Position pos = new Position(
+				(int)(Math.round(lastRobotPosition.getX() / cellStep)), 
+				(int)(Math.round(lastRobotPosition.getY() / cellStep)));
+		
+		this.autoScanAlgorithm.UpdateRoboPosition(pos);
+		
+		this.autoScanAlgorithm.start();
 	}
 
 	@Override
 	public void AutomaticScanModeExited() {
-		// TODO Auto-generated method stub
+		this.currentState = ManagerState.Idle;
 		
+		System.out.println("auto exit");
+		
+		this.managedRobot.Stop();
+		
+		if (this.autoScanAlgorithm != null)
+		{
+			
+			try {
+	            if (this.autoScanAlgorithm.isAlive())
+	            {
+	    			this.autoScanAlgorithm.Abort();
+	            	this.autoScanAlgorithm.interrupt();
+					this.autoScanAlgorithm.join();
+	            }
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		this.managedRobot.SetCollisionCheck(false);
 	}
+	
+	// -----------------
 
 	@Override
 	public void CalibratingRequested() {
@@ -174,13 +248,19 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void ScanArea() {
+		// Abort if we are not in the manual mode
+		if (this.currentState != ManagerState.ManualScan)
+		{
+			return;
+		}
+		
 		float distance = -1;
 		float rotation;
 		Position start;
 		
 		if (!this.managedRobot.IsMoving())
 		{
-			start = new Position((int)(Math.round(this.lastRobotPosition.x / 0.5F)), (int)(Math.round(this.lastRobotPosition.y / 0.5F)));
+			start = new Position((int)(Math.round(this.lastRobotPosition.x / cellStep)), (int)(Math.round(this.lastRobotPosition.y / cellStep)));
 			
 			// First
 			rotation = this.managedRobot.GetRotation();
@@ -231,6 +311,18 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void TravelRouteRequested(Serialize.TravelRequest request) {
+		// Abort if we are not in idle or travel mode, because this means
+		// that the user wants to scan the map.
+		if (this.currentState != ManagerState.Idle && this.currentState != ManagerState.TravelRoute)
+		{
+			this.remoteServer.SendTravelResponse(new TravelResponse(request.ID, false, request.TravelledRoute));
+			
+			return;
+		}
+		
+		// Switch to travel mode
+		this.currentState = ManagerState.TravelRoute;
+		
 		System.out.println(request.TravelledRoute.Get_Route().size());
 		System.out.println("> " + request.TravelledMap.Get_Fields()[0][0].Get_State().ordinal());
 		System.out.println("> " + request.TravelledMap.Get_Fields()[1][1].Get_State().ordinal());
@@ -267,7 +359,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
             
             this.travelThread = new TravelThread(this.managedRobot, convertedToAbsolute);
             this.travelThread.start();*/
-        	this.DriveRobotRoute(new Route(convertedToRelative));
+        	this.StartRoute(new Route(convertedToRelative), true);
             
             this.remoteServer.SendTravelResponse(new TravelResponse(request.ID, true, new Route(convertedToRelative)));
         }
@@ -286,7 +378,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	 * @param route 
 	 * The route must contain relative coordinates
 	 */
-	private void StartRoute(Route route)
+	private void StartRoute(Route route, boolean repeat)
 	{
         // Convert relative coordinates to absolute coordinates (1 -> 50cm for example)
         List<Point> convertedToAbsolute = new ArrayList<Point>();
@@ -300,26 +392,29 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
         this.CancelRoute();
         
-        this.travelThread = new TravelThread(this.managedRobot, convertedToAbsolute);
+        this.travelThread = new TravelThread(this.managedRobot, convertedToAbsolute, repeat);
         this.travelThread.start();
 	}
 	
 	private void CancelRoute()
 	{
-        if (this.travelThread != null)
-        {
-	    	try {
-	            if (this.travelThread.IsRunning())
-	            {
-	            	this.travelThread.CancelRoute();
-	            	this.travelThread.interrupt();
-					this.travelThread.join();
-	            }
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-        }
+		if (this.currentState == ManagerState.TravelRoute)
+		{
+	        if (this.travelThread != null)
+	        {
+		    	try {
+		            if (this.travelThread.IsRunning())
+		            {
+		            	this.travelThread.CancelRoute();
+		            	this.travelThread.interrupt();
+						this.travelThread.join();
+		            }
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	        }
+		}
 	}
 	
 	//
@@ -339,7 +434,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void DriveRobotRoute(Route route) {
-		this.StartRoute(route);
+		this.StartRoute(route, false);
 	}
 
 	@Override
@@ -358,6 +453,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void UpdateScanMap(ScanMap map) {
-		this.remoteServer.SendMapUpdate(map.map);
+		this.scannedMap = map;
+		
+		this.remoteServer.SendMapUpdate(this.scannedMap.map);
 	}
 }
