@@ -113,7 +113,9 @@ public class ScanAlgorithm {
 			}
 			
 			// TODO: Nächstes freies, ungescanntes Feld anfahren
-			// Route abfahren				
+			// Route abfahren		
+			routeToNextCell = (ArrayList<Position>) this.scanMap.map.ConvertFromArrayToRelativePositions(routeToNextCell);
+			
 			roboInfo.DriveRobotRoute(new Route(routeToNextCell));
 		}		
 	}
