@@ -10,6 +10,7 @@ import Serialize.Position;
 import Serialize.RoboStatus;
 import Serialize.Route;
 import calibrating.CalibratingUtil;
+import interfaces.IAlgorithmHelper;
 import interfaces.RemoteControlListener;
 import interfaces.RobotStatusListener;
 import lejos.robotics.geometry.Point;
@@ -22,10 +23,8 @@ import pathfinding.PathAlgorithm;
 import pathfinding.PathIO;
 import robot.Robot;
 
-public class Manager implements RemoteControlListener, RobotStatusListener {
+public class Manager implements RemoteControlListener, RobotStatusListener, IAlgorithmHelper {
 	private Robot managedRobot;
-	
-	private RemoteControlServer remoteServer;
 	
 	private ScanMap scannedMap;
 	
@@ -37,6 +36,12 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
 	private TravelThread travelThread;
 	
 	private TravelRequest travelRequest;
+	
+	// Remote
+	
+	private RemoteControlServer remoteServer;
+	
+	private boolean isConnectedToRemote;
 	
 	public Manager(Robot managedRobot)
 	{
@@ -57,6 +62,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
 	public void Stop()
 	{
 		this.remoteServer.Stop();
+		this.CancelRoute();
 	}
 	
 	//
@@ -94,14 +100,12 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
 
 	@Override
 	public void ConnectedToRemote() {
-		// TODO Auto-generated method stub
-		
+		this.isConnectedToRemote = true;
 	}
 
 	@Override
 	public void DisconnectedFromRemote() {
-		// TODO Auto-generated method stub
-		
+		this.isConnectedToRemote = true;
 	}
 
 	@Override
@@ -239,6 +243,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
         List<Position> calc = PathIO.CalculatePath(request.TravelledMap, new Route(convertedToIndex), path);
         
         // Convert them back to relative coordinates
+        // to make them ready for real life coordinates
         List<Position> convertedToRelative = request.TravelledMap.ConvertFromArrayToRelativePositions(calc);
         
         if (convertedToRelative.isEmpty())
@@ -247,6 +252,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
         }
         else
         {
+        	/*
             // Convert relative coordinates to absolute coordinates (1 -> 50cm for example)
             List<Point> convertedToAbsolute = new ArrayList<Point>();
             
@@ -260,7 +266,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
             this.CancelRoute();
             
             this.travelThread = new TravelThread(this.managedRobot, convertedToAbsolute);
-            this.travelThread.start();
+            this.travelThread.start();*/
+        	this.DriveRobotRoute(new Route(convertedToRelative));
             
             this.remoteServer.SendTravelResponse(new TravelResponse(request.ID, true, new Route(convertedToRelative)));
         }
@@ -269,6 +276,32 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
 	@Override
 	public void CancelRouteRequested() {
 		this.CancelRoute();
+	}
+	
+	//
+	// ----------
+	//
+
+	/**
+	 * @param route 
+	 * The route must contain relative coordinates
+	 */
+	private void StartRoute(Route route)
+	{
+        // Convert relative coordinates to absolute coordinates (1 -> 50cm for example)
+        List<Point> convertedToAbsolute = new ArrayList<Point>();
+        
+        for (Position pos : route.Get_Route())
+        {
+        	Point n = new Point((float)pos.Get_X() * cellStep, (float)pos.Get_Y() * cellStep);
+        	
+        	convertedToAbsolute.add(n);
+        }
+
+        this.CancelRoute();
+        
+        this.travelThread = new TravelThread(this.managedRobot, convertedToAbsolute);
+        this.travelThread.start();
 	}
 	
 	private void CancelRoute()
@@ -287,5 +320,44 @@ public class Manager implements RemoteControlListener, RobotStatusListener {
 				e.printStackTrace();
 			}
         }
+	}
+	
+	//
+	// Algorithm helper
+	//
+
+	@Override
+	public void RotateRobotTo(float degrees) {
+		this.managedRobot.RotateToDegrees(degrees);
+	}
+
+	@Override
+	public void DriveRobotTo(Position position) {
+		// TODO:
+		// Remove probably?????
+	}
+
+	@Override
+	public void DriveRobotRoute(Route route) {
+		this.StartRoute(route);
+	}
+
+	@Override
+	public int MeasureDistance() {
+		float distance = this.managedRobot.ScanDistance();
+		
+		if (distance > 0)
+		{
+			int calc = (int)(distance / cellStep);
+			
+			return calc;
+		}
+
+		return -1;
+	}
+
+	@Override
+	public void UpdateScanMap(ScanMap map) {
+		this.remoteServer.SendMapUpdate(map.map);
 	}
 }

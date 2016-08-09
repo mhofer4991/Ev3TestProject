@@ -71,7 +71,7 @@ public class ScanAlgorithm {
 			
 			// Liste der free Felder
 			ArrayList<Position> freeCells = this.scanMap.GetAllFreeCells();
-			ArrayList<Position> routeToNextCell = new ArrayList<Position>();				
+			List<Position> routeToNextCell = new ArrayList<Position>();				
 			
 			// Liste der free Felder durchgehen und Route berechnen											
 			int i = 0;
@@ -114,7 +114,7 @@ public class ScanAlgorithm {
 			
 			// TODO: Nächstes freies, ungescanntes Feld anfahren
 			// Route abfahren		
-			routeToNextCell = (ArrayList<Position>) this.scanMap.map.ConvertFromArrayToRelativePositions(routeToNextCell);
+			routeToNextCell = this.scanMap.map.ConvertFromArrayToRelativePositions(routeToNextCell);
 			
 			roboInfo.DriveRobotRoute(new Route(routeToNextCell));
 		}		
