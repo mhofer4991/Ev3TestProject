@@ -71,9 +71,30 @@ public class ScanMap {
 						(float)startPosition.Get_X() + 0.5F, 
 						(float)startPosition.Get_Y() + 0.5F,
 						(float)endPosition.Get_X() + 0.5F,
-						(float)endPosition.Get_Y() + 0.5F, i, j)) && (this.map.Get_Fields()[i][j].Get_State() == Fieldstate.unscanned))
+						(float)endPosition.Get_Y() + 0.5F, i, j)))
 				{
-					this.map.Get_Fields()[i][j].Set_State(state);
+					Field f = this.map.Get_Fields()[i][j];
+					
+					// occupied always overwrite
+					if (state == Fieldstate.occupied)
+					{
+						//this.map.Get_Fields()[i][j].Set_State(state);
+						f.Set_State(state);
+					}
+					else if (state == Fieldstate.free)
+					{
+						if (f.Get_State() == Fieldstate.unscanned)
+						{
+							f.Set_State(state);
+						}
+					}
+					else if (state == Fieldstate.freeScanned)
+					{
+						if (f.Get_State() == Fieldstate.unscanned || f.Get_State() == Fieldstate.free)
+						{
+							f.Set_State(state);
+						}
+					}
 				}
 			}
 		}		

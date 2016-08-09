@@ -46,6 +46,8 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	
 	private float lastRotation;
 	
+	private boolean waitForPositionRefresh;
+	
 	// collision detection
 	private CollisionThread collisionThread;
 	
@@ -385,6 +387,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				listener.RobotStatusUpdated(status);
 			}
 			
+			this.waitForPositionRefresh = false;
 			this.currentMovement = MovementMode.Idle;
 		}
 	}
@@ -438,7 +441,10 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				
 				if (!rescued)
 				{
-					
+					for (RobotStatusListener listener : listeners)
+					{
+						listener.RobotStoppedDueToObstacle(this.GetStatus());
+					}
 				}
 			}
 		}
@@ -479,6 +485,11 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				this.TurnRightByDegrees(Math.abs(diff));
 			}
 			
+			for (RobotStatusListener listener : listeners)
+			{
+				listener.RobotStoppedDueToObstacle(this.GetStatus());
+			}
+			
 			System.out.println("unexpected rotation detected!");
 		}
 	}
@@ -489,7 +500,10 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		{
 			this.Stop();
 			
-			//this.DriveDistanceBackward(0.15F);
+			for (RobotStatusListener listener : listeners)
+			{
+				listener.RobotStoppedDueToObstacle(this.GetStatus());
+			}
 		}
 	}
 }

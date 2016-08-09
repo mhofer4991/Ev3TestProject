@@ -64,4 +64,11 @@ public class Map {
 		
 		return converted;
 	}
+	
+	public Field GetFieldByRelativePosition(Position relPos)
+	{
+		Position newPos = GetIndex(relPos.Get_X(), relPos.Get_Y());
+		
+		return this.Get_Fields()[newPos.Get_X()][newPos.Get_Y()];
+	}
 }

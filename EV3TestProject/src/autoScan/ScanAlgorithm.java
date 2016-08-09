@@ -24,6 +24,16 @@ public class ScanAlgorithm extends Thread {
 
 	public void UpdateRoboPosition(Position position)
 	{
+		/*if (roboPosition != null)
+		{
+			//this.scanMap.map.GetFieldByRelativePosition(roboPosition).Set_State(Fieldstate.freeScanned);
+			this.scanMap.AddScanResult(position, roboPosition, Fieldstate.freeScanned);
+			
+			// Manager benachrichtigen
+			roboInfo.UpdateScanMap(this.scanMap);
+		}*/
+		this.abort = false;	
+		
 		this.roboPosition = position;
 	}	
 	
@@ -39,14 +49,11 @@ public class ScanAlgorithm extends Thread {
 	}
 	
 	public void Scan()
-	{
-		this.abort = false;			
+	{	
+		
 		
 		while (!this.abort)
-		{
-			// Current Field auf free&scanned setzen
-			this.scanMap.map.Get_Fields()[roboPosition.Get_X()][roboPosition.Get_Y()].Set_State(Fieldstate.freeScanned);
-			
+		{		
 			// Scan in die Richtungen wo unscanned oder free ist
 			ArrayList<Integer> directions = new ArrayList<Integer>();
 			for (int i = 0; i < 4; i++)
@@ -76,14 +83,21 @@ public class ScanAlgorithm extends Thread {
 				roboInfo.UpdateScanMap(this.scanMap);
 			}
 			
+			// Current Field auf free&scanned setzen
+			//this.scanMap.map.Get_Fields()[roboPosition.Get_X()][roboPosition.Get_Y()].Set_State(Fieldstate.freeScanned);
+			this.scanMap.map.GetFieldByRelativePosition(roboPosition).Set_State(Fieldstate.freeScanned);
+			
+			// Manager benachrichtigen
+			roboInfo.UpdateScanMap(this.scanMap);
+			
 			// Liste der free Felder
-			ArrayList<Position> freeCells = this.scanMap.GetAllFreeCells();
-			List<Position> routeToNextCell = new ArrayList<Position>();				
+			ArrayList<Position> freeCells = this.scanMap.GetAllFreeCells();			
 			
 			// Liste der free Felder durchgehen und Route berechnen											
 			int i = 0;
+			List<Position> shortestRoute = null;
 			
-			while (routeToNextCell.size() < 2 && i < freeCells.size())
+			while (i < freeCells.size())
 			{				
 				// Route berechnen
 				//ArrayList<Edge> startEnd = new ArrayList<Edge>();
@@ -92,16 +106,32 @@ public class ScanAlgorithm extends Thread {
 				
 				List<Position> positions = new ArrayList<Position>();
 				
-				positions.add(this.scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Get_Position());
+				positions.add(scanMap.map.GetIndex(roboPosition.Get_X(), roboPosition.Get_Y()));
+				positions.add(freeCells.get(i)); // this.scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Get_Position());
+				
+				//positions = this.scanMap.map.ConvertFromRelativeToArrayPositions(positions);
 				
 				Route route = new Route(positions);
-				
-				routeToNextCell = PathIO.CalculatePath(this.scanMap.map, route, new A_Star());
+
+				List<Position> routeToNextCell = PathIO.CalculatePath(this.scanMap.map, route, new A_Star());
 				
 				// TChecken ob die Route mind. 2 einträge hat
-				if (routeToNextCell.size() >= 2)
-				{					
-					break;
+				if (routeToNextCell.size() >= 1)
+				{			
+					System.out.println("pl " + routeToNextCell.size());
+
+					if (shortestRoute == null)
+					{
+						shortestRoute = routeToNextCell;
+					}
+					else
+					{
+						if (routeToNextCell.size() < shortestRoute.size())
+						{
+							shortestRoute = routeToNextCell;
+						}
+					}
+					//break;
 				}				
 				else
 				{
@@ -114,16 +144,14 @@ public class ScanAlgorithm extends Thread {
 			}
 			
 			// Wenn keine Felder mehr angefahren werden können
-			if (routeToNextCell.size() < 2)
+			if (shortestRoute != null)
 			{
-				return;
+				// TODO: Nächstes freies, ungescanntes Feld anfahren
+				// Route abfahren
+				shortestRoute = this.scanMap.map.ConvertFromArrayToRelativePositions(shortestRoute);
+				
+				roboInfo.DriveRobotRoute(new Route(shortestRoute));
 			}
-			
-			// TODO: Nächstes freies, ungescanntes Feld anfahren
-			// Route abfahren		
-			routeToNextCell = this.scanMap.map.ConvertFromArrayToRelativePositions(routeToNextCell);
-			
-			roboInfo.DriveRobotRoute(new Route(routeToNextCell));
 		}		
 	}
 	

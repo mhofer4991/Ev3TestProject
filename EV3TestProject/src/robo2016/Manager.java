@@ -121,6 +121,25 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		
 		this.lastRobotPosition = new Point(status.X, status.Y);
 	}
+
+	@Override
+	public void RobotStoppedDueToObstacle(RoboStatus status) {
+		if (this.currentState == ManagerState.AutoScan)
+		{
+			Position pos = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
+			Position arrPos = scannedMap.map.GetIndex(pos.Get_X(), pos.Get_Y());
+			
+			this.scannedMap.map.Get_Fields()[arrPos.Get_X()][arrPos.Get_Y()].Set_State(Fieldstate.occupied);
+			
+			this.remoteServer.SendMapUpdate(scannedMap.map);
+			
+			this.AutomaticScanModeExited();
+			
+			this.managedRobot.DriveDistanceBackward(0.5F);
+			
+			this.AutomaticScanModeStarted();
+		}
+	}
 	
 	//
 	// Remote listener
@@ -140,12 +159,15 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void ManualScanModeStarted() {
-		this.currentState = ManagerState.ManualScan;
-		
-		System.out.println("manual start");
-		
-		// Reset map?????
-		this.managedRobot.SetCollisionCheck(false);
+		if (this.currentState == ManagerState.Idle)
+		{
+			this.currentState = ManagerState.ManualScan;
+			
+			System.out.println("manual start");
+			
+			// Reset map?????
+			this.managedRobot.SetCollisionCheck(false);
+		}
 	}
 
 	@Override
@@ -159,49 +181,57 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void AutomaticScanModeStarted() {
-		this.currentState = ManagerState.AutoScan;
-		
-		System.out.println("auto start");
-		
-		// Reset map?????
-		this.managedRobot.SetCollisionCheck(true);
-		
-		this.autoScanAlgorithm = new ScanAlgorithm(this.scannedMap, this);
-		
-		Position pos = new Position(
-				(int)(Math.round(lastRobotPosition.getX() / cellStep)), 
-				(int)(Math.round(lastRobotPosition.getY() / cellStep)));
-		
-		this.autoScanAlgorithm.UpdateRoboPosition(pos);
-		
-		this.autoScanAlgorithm.start();
+		if (this.currentState == ManagerState.Idle)
+		{
+			this.currentState = ManagerState.AutoScan;
+			
+			System.out.println("auto start");
+			
+			// Reset map?????
+			this.managedRobot.SetCollisionCheck(false);
+			
+			this.autoScanAlgorithm = new ScanAlgorithm(this.scannedMap, this);
+			
+			Position pos = new Position(
+					(int)(Math.round(lastRobotPosition.getX() / cellStep)), 
+					(int)(Math.round(lastRobotPosition.getY() / cellStep)));
+			
+			this.autoScanAlgorithm.UpdateRoboPosition(pos);
+			
+			this.autoScanAlgorithm.start();
+		}
 	}
 
 	@Override
 	public void AutomaticScanModeExited() {
-		this.currentState = ManagerState.Idle;
-		
-		System.out.println("auto exit");
-		
-		this.managedRobot.Stop();
-		
-		if (this.autoScanAlgorithm != null)
+		if (this.currentState == ManagerState.AutoScan)
 		{
+			this.currentState = ManagerState.Idle;
 			
-			try {
-	            if (this.autoScanAlgorithm.isAlive())
-	            {
-	    			this.autoScanAlgorithm.Abort();
-	            	this.autoScanAlgorithm.interrupt();
-					this.autoScanAlgorithm.join();
-	            }
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			System.out.println("auto exit");
+			
+			this.managedRobot.Stop();
+			
+			this.CancelRoute();
+			
+			if (this.autoScanAlgorithm != null)
+			{
+				
+				try {
+		            if (this.autoScanAlgorithm.isAlive())
+		            {
+		    			this.autoScanAlgorithm.Abort();
+		            	this.autoScanAlgorithm.interrupt();
+						this.autoScanAlgorithm.join();
+		            }
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-		}
 
-		this.managedRobot.SetCollisionCheck(false);
+			this.managedRobot.SetCollisionCheck(false);
+		}
 	}
 	
 	// -----------------
@@ -359,6 +389,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
             
             this.travelThread = new TravelThread(this.managedRobot, convertedToAbsolute);
             this.travelThread.start();*/
+        	this.travelRequest = request;
+        	
         	this.StartRoute(new Route(convertedToRelative), true);
             
             this.remoteServer.SendTravelResponse(new TravelResponse(request.ID, true, new Route(convertedToRelative)));
@@ -367,7 +399,10 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void CancelRouteRequested() {
-		this.CancelRoute();
+		if (this.currentState == ManagerState.TravelRoute)
+		{
+			this.CancelRoute();
+		}
 	}
 	
 	//
@@ -398,23 +433,20 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	
 	private void CancelRoute()
 	{
-		if (this.currentState == ManagerState.TravelRoute)
-		{
-	        if (this.travelThread != null)
-	        {
-		    	try {
-		            if (this.travelThread.IsRunning())
-		            {
-		            	this.travelThread.CancelRoute();
-		            	this.travelThread.interrupt();
-						this.travelThread.join();
-		            }
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-	        }
-		}
+        if (this.travelThread != null)
+        {
+	    	try {
+	            if (this.travelThread.IsRunning())
+	            {
+	            	this.travelThread.CancelRoute();
+	            	this.travelThread.interrupt();
+					this.travelThread.join();
+	            }
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
 	}
 	
 	//
@@ -433,8 +465,14 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	}
 
 	@Override
-	public void DriveRobotRoute(Route route) {
-		this.StartRoute(route, false);
+	public void DriveRobotRoute(Route route) {		
+		try {
+			this.StartRoute(route, false);
+			
+			this.travelThread.join();
+		} catch (InterruptedException e) {
+			//e.printStackTrace();
+		}
 	}
 
 	@Override

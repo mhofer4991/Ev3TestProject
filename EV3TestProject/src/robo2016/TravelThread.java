@@ -52,9 +52,12 @@ public class TravelThread extends Thread {
 		{
 			for (Point pos : route)
             {
-				this.currentDestination = pos;
-				
-            	this.controllable.DriveToPosition(pos);
+				if (this.running)
+				{
+					this.currentDestination = pos;
+					
+	            	this.controllable.DriveToPosition(pos);
+				}
             }
 		}
 		while (this.running && this.repeat);
