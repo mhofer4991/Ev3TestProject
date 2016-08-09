@@ -1,108 +1,30 @@
 package autoScan;
 
 import java.util.ArrayList;
+import java.util.List;
+
 import Serialize.*;
 import pathfinding.*;
+import interfaces.*;
 
 public class ScanAlgorithm {
-	
-	public static void main(String[] args)
-	{
-		ScanMap sm = new ScanMap();
-		
-		Field[][] fields = new Field[3][3];
-        
-        for (int i = 0; i < 3; i++)
-        {
-        	for (int j = 0; j < 3; j++)
-        	{
-        		fields[i][j] = new Field(i,j);
-        	}
-        }              
-        
-        fields[0][0].Set_State(Fieldstate.occupied);
-        fields[0][1].Set_State(Fieldstate.occupied);
-        fields[0][2].Set_State(Fieldstate.occupied);
-        fields[1][0].Set_State(Fieldstate.occupied);
-        fields[1][1].Set_State(Fieldstate.freeScanned);
-        fields[1][2].Set_State(Fieldstate.occupied);
-        fields[2][0].Set_State(Fieldstate.occupied);
-        fields[2][1].Set_State(Fieldstate.occupied);
-        fields[2][2].Set_State(Fieldstate.occupied);
-		
-        sm.map.Set_Fields(fields);
-        
-		Draw(sm.map);
-		
-		sm.Extend(0, 1);
-		
-		Draw(sm.map);
-		
-		sm.Extend(1, 2);
-		
-		Draw(sm.map);
-		
-		sm.Extend(2, 3);
-		
-		Draw(sm.map);
-		
-		sm.Extend(3, 5);
-		
-		Draw(sm.map);
-		
-		sm.Extend(2, 5);
-		
-		Draw(sm.map);
-		
-		sm.Extend(1, 5);
-		
-		Draw(sm.map);
-		
-		sm.Extend(0, 5);
-		
-		Draw(sm.map);
-	}
-	
-	public static void Draw(Map map)
-	{
-		Field[][] fields =  map.Get_Fields();
-		
-		for (int i = 0; i < fields.length; i++)
-		{
-			for (int j = 0; j < fields[0].length; j++)
-			{
-				
-				String text = fields[i][j].Get_Position().Get_X() + " / " + fields[i][j].Get_Position().Get_Y() + " : " + fields[i][j].Get_State();
-				System.out.println(text);
-				
-				/*				
-				System.out.print(fields[i][j].Get_State().ordinal());
-				*/
-			}
-			
-			System.out.println();
-		}
-		
-		System.out.println();
-		System.out.println();
-	}
-	
-	
-	
-	
-	public ScanAlgorithm(Map map)
+	public ScanAlgorithm(Map map, IAlgorithmHelper roboInfo)
 	{
 		this.abort = false;
 		this.scanMap = new ScanMap();
 		this.scanMap.map = map;
-		
+		this.roboInfo = roboInfo;
 	}
-	
+		
 	private boolean abort;
 	public ScanMap scanMap;
 	public Position roboPosition;
+	private IAlgorithmHelper roboInfo;
 
-	
+	public void UpdateRoboPosition(Position position)
+	{
+		this.roboPosition = position;
+	}	
 	
 	public void Abort()
 	{
@@ -134,15 +56,17 @@ public class ScanAlgorithm {
 				// 0 up, 1 right, 2 down, 3 left
 				int direction = 90 * i;
 				
-				// TODO: RotateTo Degrees
+				// RotateTo Degrees
+				roboInfo.RotateRobotTo(direction);
 				
-				// TODO: Scanresult from brick
-				int freeDistance = 1;
+				// Scanresult from brick
+				int freeDistance = roboInfo.MeasureDistance();
 				
 				// Scanergebnis einbinden
 				this.scanMap.AddScanResult(direction, freeDistance, roboPosition, Fieldstate.free);
 				
-				// TODO: Manager benachrichtigen
+				// Manager benachrichtigen
+				roboInfo.UpdateScanMap(this.scanMap);
 			}
 			
 			// Liste der free Felder
@@ -155,11 +79,17 @@ public class ScanAlgorithm {
 			while (routeToNextCell.size() < 2 && i < freeCells.size())
 			{				
 				// Route berechnen
-				ArrayList<Edge> startEnd = new ArrayList<Edge>();
-				Edge route = new Edge(roboPosition, this.scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Get_Position());
-				startEnd.add(route);
+				//ArrayList<Edge> startEnd = new ArrayList<Edge>();
+				//Edge route = new Edge(roboPosition, this.scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Get_Position());
+				//startEnd.add(route);
 				
-				routeToNextCell = PathIO.GetPath(this.scanMap.map, startEnd, new A_Star()).get(0);
+				List<Position> positions = new ArrayList<Position>();
+				
+				positions.add(this.scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Get_Position());
+				
+				Route route = new Route(positions);
+				
+				routeToNextCell = PathIO.CalculatePath(this.scanMap.map, route, new A_Star());
 				
 				// TChecken ob die Route mind. 2 einträge hat
 				if (routeToNextCell.size() >= 2)
@@ -183,9 +113,8 @@ public class ScanAlgorithm {
 			}
 			
 			// TODO: Nächstes freies, ungescanntes Feld anfahren
-			// Route abfahren
-				
-			
+			// Route abfahren				
+			roboInfo.DriveRobotRoute(new Route(routeToNextCell));
 		}		
 	}
 	
