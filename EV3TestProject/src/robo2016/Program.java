@@ -1,4 +1,4 @@
-package test;
+package robo2016;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,6 +8,8 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.rmi.server.RemoteServer;
+
+import javax.swing.text.DefaultEditorKit.BeepAction;
 
 import calibrating.CalibratingUtil;
 import lejos.hardware.lcd.LCD;
@@ -22,7 +24,6 @@ import lejos.robotics.RegulatedMotor;
 import lejos.robotics.geometry.Point;
 import lejos.utility.Delay;
 import network.RemoteControlServer;
-import robo2016.Manager;
 import robot.Driving;
 import robot.Robot;
 
@@ -122,6 +123,8 @@ public class Program {
 		//ro.SetCollisionCheck(true);
 		//ro.DriveDistanceForward(2);
 		//ro.TurnRightByDegrees(-135);
+		//ro.RotateToDegrees(270);
+		//ro.RotateToDegrees(0);
 		
 		/*ro.DriveToPosition(new Point(0.5F, 0.5F));
 		ro.DriveToPosition(new Point(0.5F, -0.5F));

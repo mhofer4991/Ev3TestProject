@@ -9,9 +9,16 @@ public interface RemoteControlListener {
 	void ConnectedToRemote();
 	void DisconnectedFromRemote();
 	
+	// auto <--> manual
+	void ManualScanModeStarted();
+	void ManualScanModeExited();
+	void AutomaticScanModeStarted();
+	void AutomaticScanModeExited();
+	
 	// 
 	void CalibratingRequested();
 	void TravelRouteRequested(TravelRequest request);
+	void CancelRouteRequested();
 	
 	// Remote controlling the robot
 	void DriveRobotForward();
@@ -21,4 +28,5 @@ public interface RemoteControlListener {
 	void TurnRobotRight();
 	void TurnRobotRight(float degrees);
 	void StopRobot();
+	void ScanArea();
 }

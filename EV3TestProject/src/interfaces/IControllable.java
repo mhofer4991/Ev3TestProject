@@ -18,7 +18,10 @@ public interface IControllable {
 	void TurnRight();
 	void TurnLeft();
 	
+	boolean IsMoving();
+	void RotateToDegrees(float degrees);
 	void DriveToPosition(Point position);
+	float ScanDistance();
 
 	void Stop();
 }

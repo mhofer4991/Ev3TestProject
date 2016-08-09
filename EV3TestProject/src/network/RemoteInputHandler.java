@@ -14,6 +14,8 @@ public class RemoteInputHandler {
 	
 	public final static int CODE_STOP = 5;
 	
+	public final static int CODE_SCAN = 6;
+	
 	private RemoteControlListener listener;
 	
 	private ControlInput previousInput;
@@ -40,6 +42,9 @@ public class RemoteInputHandler {
 				break;
 			case CODE_RIGHT:
 				listener.TurnRobotRight(input.Value);
+				break;
+			case CODE_SCAN:
+				listener.ScanArea();
 				break;
 			}
 		}

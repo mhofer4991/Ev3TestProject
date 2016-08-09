@@ -27,7 +27,8 @@ import lejos.robotics.RegulatedMotorListener;
 import lejos.robotics.geometry.Point;
 import lejos.utility.Delay;
 
-public class Robot implements IControllable, RegulatedMotorListener, CollisionListener, RemoteControlListener {
+public class Robot implements IControllable, RegulatedMotorListener, CollisionListener {
+	public final static float MAX_ULTRA_SONIC_DISTANCE = 2.5F; // meters
 	private EV3TouchSensor touch;
 	private HiTechnicAccelerometer acc;
 	private EV3UltrasonicSensor ultra;
@@ -229,6 +230,38 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	}
 
 	@Override
+	public boolean IsMoving() {
+		return (driving.GetLeft().isMoving() || driving.GetRight().isMoving());
+	}
+
+	@Override
+	public void RotateToDegrees(float degrees) {
+		float[] data = new float[1];
+		
+		gyro.getAngleMode().fetchSample(data, 0);
+		
+		data[0] = data[0] % 360;
+		
+		degrees = degrees % 360;
+		
+		float diff = data[0] - degrees;
+		
+		if (Math.abs(diff) > 180)
+		{
+			if (diff > 0)
+			{
+				diff -= 360;
+			}
+			else
+			{
+				diff += 360;
+			}
+		}
+		
+		this.TurnLeftByDegrees(diff);
+	}
+
+	@Override
 	public void DriveToPosition(Point position) {
 		float a = position.x - this.position.x;
 		float g = position.y - this.position.y;
@@ -262,6 +295,29 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		}
 		
 		this.DriveDistanceForward(h);
+	}
+
+	@Override
+	public float ScanDistance() {
+		if (!this.IsMoving())
+		{
+			float[] data = new float[1];
+			
+			ultra.getDistanceMode().fetchSample(data, 0);
+			
+			if (Float.isInfinite(data[0]))
+			{
+				data[0] = MAX_ULTRA_SONIC_DISTANCE;
+			}
+			else if (Float.isNaN(data[0]))
+			{
+				data[0] = -1;
+			}
+			
+			return data[0];
+		}
+		
+		return -1;
 	}
 	
 	//
@@ -435,70 +491,5 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 			
 			this.DriveDistanceBackward(0.15F);
 		}
-	}
-	
-	//
-	//
-	//
-
-	@Override
-	public void ConnectedToRemote() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void DisconnectedFromRemote() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void DriveRobotForward() {
-		this.DriveForward();
-	}
-
-	@Override
-	public void DriveRobotBackward() {
-		this.DriveBackward();
-	}
-
-	@Override
-	public void TurnRobotLeft() {
-		this.TurnLeft();
-	}
-
-	@Override
-	public void TurnRobotRight() {
-		this.TurnRight();
-	}
-
-	@Override
-	public void StopRobot() {
-		this.Stop();
-	}
-
-	@Override
-	public void CalibratingRequested() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void TravelRouteRequested(Serialize.TravelRequest request) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void TurnRobotLeft(float degrees) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void TurnRobotRight(float degrees) {
-		// TODO Auto-generated method stub
-		
 	}
 }

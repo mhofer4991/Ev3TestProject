@@ -24,7 +24,7 @@ import interfaces.RobotStatusListener;
 import lejos.hardware.lcd.LCD;
 import lejos.utility.Delay;
 
-public class RemoteControlServer extends Thread implements RobotStatusListener {
+public class RemoteControlServer extends Thread {
 	public final static int PORT = 4001;
 	
 	public final static byte MSGCODE_REMOTE_CONTROL_INPUT = 1;
@@ -38,6 +38,16 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 	public final static byte MSGCODE_ROBOT_TRAVEL_ROUTE_RESPONSE = 8;
 	
 	public final static byte MSGCODE_ROBOT_SCAN_MAP_UPDATE = 9;
+
+    public final static byte MSGCODE_ROBOT_CANCEL_ROUTE_REQUESET = 10;
+
+    public final static byte MSGCODE_ROBOT_START_MANUAL_SCAN_MODE = 11;
+
+    public final static byte MSGCODE_ROBOT_EXIT_MANUAL_SCAN_MODE = 12;
+
+    public final static byte MSGCODE_ROBOT_START_AUTO_SCAN_MODE = 13;
+
+    public final static byte MSGCODE_ROBOT_EXIT_AUTO_SCAN_MODE = 14;
 	
 	private RemoteControlListener listener;
 	
@@ -48,6 +58,8 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 	private Socket clientSocket;
 	
 	private boolean isConnected;
+	
+	private boolean listenToRemoteControlInput;
 	
 	public RemoteControlServer(RemoteControlListener listener)
 	{		
@@ -117,6 +129,10 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
         }
 	}
 	
+	//
+	// Send methods
+	//
+	
 	/*
 	 * Much thanks to 
 	 * http://stackoverflow.com/questions/5865728/bitconverter-for-java
@@ -131,9 +147,9 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 		this.SendMessage(MSGCODE_ROBOT_STATUS_UPDATE, status);
 	}
 	
-	public void SendTravelResponse(int id, Route createdRoute)
+	public void SendTravelResponse(TravelResponse response)
 	{
-		this.SendMessage(MSGCODE_ROBOT_TRAVEL_ROUTE_RESPONSE, new TravelResponse(id, createdRoute));
+		this.SendMessage(MSGCODE_ROBOT_TRAVEL_ROUTE_RESPONSE, response);
 	}
 	
 	public void SendMapUpdate(Map map)
@@ -169,6 +185,10 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 			}
 		}
 	}
+	
+	//
+	// Handle methods
+	//
 	
 	private void HandleClient(Socket client) throws IOException
 	{
@@ -238,10 +258,13 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 		}
 		else if (code == MSGCODE_REMOTE_CONTROL_INPUT)
 		{
-			ControlInput in = Helper.GetObjectFromString(text, ControlInput.class);
-			
-			//System.out.println(in.Code);
-			this.HandleControlInput(in);
+			if (this.listenToRemoteControlInput)
+			{
+				ControlInput in = Helper.GetObjectFromString(text, ControlInput.class);
+				
+				//System.out.println(in.Code);
+				this.HandleControlInput(in);
+			}
 		}
 		else if (code == MSGCODE_ROBOT_CALIBRATE_REQUEST)
 		{
@@ -252,6 +275,30 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 			TravelRequest request = Helper.GetObjectFromString(text, TravelRequest.class);
 			
 			this.listener.TravelRouteRequested(request);
+		}
+		else if (code == MSGCODE_ROBOT_CANCEL_ROUTE_REQUESET)
+		{
+			this.listener.CancelRouteRequested();
+		}
+		else if (code == MSGCODE_ROBOT_START_MANUAL_SCAN_MODE)
+		{
+			this.listenToRemoteControlInput = true;
+			
+			this.listener.ManualScanModeStarted();
+		}
+		else if (code == MSGCODE_ROBOT_EXIT_MANUAL_SCAN_MODE)
+		{
+			this.listenToRemoteControlInput = false;
+			
+			this.listener.ManualScanModeExited();
+		}
+		else if (code == MSGCODE_ROBOT_START_AUTO_SCAN_MODE)
+		{
+			this.listener.AutomaticScanModeStarted();
+		}
+		else if (code == MSGCODE_ROBOT_EXIT_AUTO_SCAN_MODE)
+		{
+			this.listener.AutomaticScanModeExited();
 		}
 		else
 		{
@@ -266,17 +313,5 @@ public class RemoteControlServer extends Thread implements RobotStatusListener {
 		//System.out.println("msg " + Integer.toString(input.Code) + " " + Boolean.toString(input.Released) + " rcvd");
 		
 		this.inputHandler.HandleInput(input);
-	}
-	
-	//
-	//
-	//
-
-	@Override
-	public void RobotStatusUpdated(RoboStatus status) {
-		if (this.isConnected)
-		{
-			this.SendRoboStatus(status);
-		}
 	}
 }

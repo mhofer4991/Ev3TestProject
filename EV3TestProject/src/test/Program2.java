@@ -31,24 +31,28 @@ public class Program2 {
         fields[2][2].Set_State(Fieldstate.unscanned);*/
 		
         map.map.Set_Fields(fields);
-        map.Extend(0, 3);
-        map.Extend(1, 3);
-        map.Extend(2, 3);
-        map.Extend(3, 3);
+        map.Extend(0, 1);
+        //map.Extend(1, 3);
+        //map.Extend(2, 3);
+        //map.Extend(3, 3);
 
         DrawMap(map);
                 
-        //map.AddScanResult(45,3, new Position(0,0), Fieldstate.freeScanned);
-        map.AddScanResult(new Position(-1, 2), new Position(-2,2), Fieldstate.freeScanned);
+        map.AddScanResult(90,20, new Position(0,1), Fieldstate.freeScanned);
+        //map.AddScanResult(new Position(-1, 2), new Position(-2,2), Fieldstate.freeScanned);
         System.out.println("-----");
         /*System.out.println(map.LineMeetsField(0, 1, 0, -1, 3, 3));
         System.out.println(map.LineMeetsField(0, 1, 0, -1, 2, 2));
         System.out.println(map.LineMeetsField(0, 1, 0, -1, 3, 2));
         System.out.println(map.LineMeetsField(0, 1, 0, -1, 2, 3));*/
         
-        System.out.println(Math.round(0.45F));
+        //System.out.println(Math.round(0.45F));
         
         DrawMap(map);   
+        
+        Field[][] d = new Field[2][4];
+        
+        System.out.println(d[2].length);
 	}
 	
 	public static void DrawMap(ScanMap map)
