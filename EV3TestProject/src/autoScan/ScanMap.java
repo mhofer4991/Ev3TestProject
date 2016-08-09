@@ -51,25 +51,10 @@ public class ScanMap {
 		
 		// Array entsprechend vergrößern
 		// mittels differnz entsprechend vergrößern		
-		if (posY > 0)
-		{
-			this.Extend(0, posY);
-		}
-		
-		if (posX > 0)
-		{
-			this.Extend(1, posX);
-		}
-		
-		if (negY > 0)
-		{
-			this.Extend(2, negY);
-		}
-		
-		if (negX > 0)
-		{
-			this.Extend(3, negX);
-		}
+		this.Extend(0, posY);
+		this.Extend(1, posX);
+		this.Extend(2, negY);
+		this.Extend(3, negX);
 		
 		//minX -= 0.5F;
 		//minY -= 0.5F;
@@ -118,117 +103,120 @@ public class ScanMap {
 	// Extends the map in a given direction: 0 - up, 1 - right, 2 - down, 3 - left
 	public void Extend(int direction, int amount) throws IllegalArgumentException
 	{
-		Field[][] current = this.map.Get_Fields();
-		Field[][] next;
-		
-		if(direction == 0 || direction == 2)
+		if (amount > 0)
 		{
-			next = new Field[current.length][current[0].length + amount];
-		}
-		else if (direction == 1 || direction == 3)
-		{
-			next = new Field[current.length + amount][current[0].length];	
-		}
-		else
-		{
-			throw new IllegalArgumentException(); 
-		}
-		
-		int minX = current[0][0].Get_Position().Get_X();
-		int minY = current[0][0].Get_Position().Get_Y();	
-		
-		int currAmountX = current.length;
-		int currAmountY = current[0].length;
-		
-		int nextAmountX = next.length;
-		int nextAmountY = next[0].length;
-		
-		switch (direction)
-		{
-			// Extend to positive Y
-			case 0:
-				// Alle X durchgehen
-				for (int i = 0; i < nextAmountX; i++)
-				{
-					// Alle bisherigen Y einfügen
-					for (int j = 0; j < currAmountY; j++)
-					{
-						next[i][j] = current[i][j];
-					}
-					
-					// Alle neuen Y einfügen
-					for (int j = 0; j < amount; j++)
-					{
-						next[i][currAmountY + j] = new Field(minX + i, minY + j + currAmountY);
-					}
-				}
-				
-				break;
-				
-			// Extend to positive X
-			case 1:
-				// Alle Y durchgehen
-				for (int j = 0; j < nextAmountY; j++)
-				{
-					// Alle bisherigen X einfügen
-					for (int i = 0; i < currAmountX; i++)
-					{
-						next[i][j] = current[i][j];
-					}				
-					
-					// Alle neuen X einfügen
-					for (int i = 0; i < amount; i++)
-					{
-						next[currAmountX + i][j] = new Field(minX + i + currAmountX, minY + j);
-					}						
-				}
-				
-				break;
-				
-			// Extend to negative Y
-			case 2:
-				// Alle X durchgehen
-				for (int i = 0; i < nextAmountX; i++)
-				{
-					// Alle neuen Y einfügen
-					for (int j = 0; j < amount; j++)
-					{
-						next[i][j] = new Field(minX + i, minY - amount + j);
-					}
-					
-					// Alle bisherigen Y einfügen
-					for (int j = 0; j < currAmountY; j++)
-					{
-						next[i][amount + j] = current[i][j];
-					}					
-				}
+			Field[][] current = this.map.Get_Fields();
+			Field[][] next;
 			
-				break;
-				
-			// Extend to negative X
-			case 3:
-				// Alle Y durchgehen
-				for (int j = 0; j < nextAmountY; j++)
-				{
-					// Alle neuen X einfügen
-					for (int i = 0; i < amount; i++)
+			if(direction == 0 || direction == 2)
+			{
+				next = new Field[current.length][current[0].length + amount];
+			}
+			else if (direction == 1 || direction == 3)
+			{
+				next = new Field[current.length + amount][current[0].length];	
+			}
+			else
+			{
+				throw new IllegalArgumentException(); 
+			}
+			
+			int minX = current[0][0].Get_Position().Get_X();
+			int minY = current[0][0].Get_Position().Get_Y();	
+			
+			int currAmountX = current.length;
+			int currAmountY = current[0].length;
+			
+			int nextAmountX = next.length;
+			int nextAmountY = next[0].length;
+			
+			switch (direction)
+			{
+				// Extend to positive Y
+				case 0:
+					// Alle X durchgehen
+					for (int i = 0; i < nextAmountX; i++)
 					{
-						next[i][j] = new Field(minX - amount + i, minY + j);
+						// Alle bisherigen Y einfügen
+						for (int j = 0; j < currAmountY; j++)
+						{
+							next[i][j] = current[i][j];
+						}
+						
+						// Alle neuen Y einfügen
+						for (int j = 0; j < amount; j++)
+						{
+							next[i][currAmountY + j] = new Field(minX + i, minY + j + currAmountY);
+						}
 					}
 					
-					// Alle bisherigen Y einfügen
-					for (int i = 0; i < currAmountX; i++)
+					break;
+					
+				// Extend to positive X
+				case 1:
+					// Alle Y durchgehen
+					for (int j = 0; j < nextAmountY; j++)
 					{
-						next[amount + i][j] = current[i][j];
-					}					
-				}
+						// Alle bisherigen X einfügen
+						for (int i = 0; i < currAmountX; i++)
+						{
+							next[i][j] = current[i][j];
+						}				
+						
+						// Alle neuen X einfügen
+						for (int i = 0; i < amount; i++)
+						{
+							next[currAmountX + i][j] = new Field(minX + i + currAmountX, minY + j);
+						}						
+					}
+					
+					break;
+					
+				// Extend to negative Y
+				case 2:
+					// Alle X durchgehen
+					for (int i = 0; i < nextAmountX; i++)
+					{
+						// Alle neuen Y einfügen
+						for (int j = 0; j < amount; j++)
+						{
+							next[i][j] = new Field(minX + i, minY - amount + j);
+						}
+						
+						// Alle bisherigen Y einfügen
+						for (int j = 0; j < currAmountY; j++)
+						{
+							next[i][amount + j] = current[i][j];
+						}					
+					}
 				
-				break;
-			default:
-				break;
+					break;
+					
+				// Extend to negative X
+				case 3:
+					// Alle Y durchgehen
+					for (int j = 0; j < nextAmountY; j++)
+					{
+						// Alle neuen X einfügen
+						for (int i = 0; i < amount; i++)
+						{
+							next[i][j] = new Field(minX - amount + i, minY + j);
+						}
+						
+						// Alle bisherigen Y einfügen
+						for (int i = 0; i < currAmountX; i++)
+						{
+							next[amount + i][j] = current[i][j];
+						}					
+					}
+					
+					break;
+				default:
+					break;
+			}
+			
+			this.map.Set_Fields(next);
 		}
-		
-		this.map.Set_Fields(next);
 	}
 	
 	// Checks if a line meets a field
