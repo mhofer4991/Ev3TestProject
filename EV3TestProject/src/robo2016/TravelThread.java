@@ -56,7 +56,15 @@ public class TravelThread extends Thread {
 				{
 					this.currentDestination = pos;
 					
-	            	this.controllable.DriveToPosition(pos);
+	            	float d = this.controllable.DriveToPosition(pos);
+	            	
+	            	// TODO:
+	            	// change this
+	            	
+	            	if (this.running)
+	            	{
+	            		this.controllable.DriveDistanceForward(d);
+	            	}
 				}
             }
 		}

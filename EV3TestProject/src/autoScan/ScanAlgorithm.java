@@ -42,6 +42,12 @@ public class ScanAlgorithm extends Thread {
 		this.abort = true;
 	}
 	
+	
+	public boolean IsAborted()
+	{
+		return this.abort;
+	}
+	
 	@Override
 	public void run()
 	{
@@ -86,7 +92,14 @@ public class ScanAlgorithm extends Thread {
 			
 			// Current Field auf free&scanned setzen
 			//this.scanMap.map.Get_Fields()[roboPosition.Get_X()][roboPosition.Get_Y()].Set_State(Fieldstate.freeScanned);
-			this.scanMap.map.GetFieldByRelativePosition(roboPosition).Set_State(Fieldstate.freeScanned);
+			Field currentField = this.scanMap.map.GetFieldByRelativePosition(roboPosition);
+			
+			if (currentField.Get_State() == Fieldstate.unscanned || currentField.Get_State() == Fieldstate.free)
+			{
+				currentField.Set_State(Fieldstate.freeScanned);
+			}
+			
+			//this.scanMap.map.GetFieldByRelativePosition(roboPosition).Set_State(Fieldstate.freeScanned);
 			
 			// Manager benachrichtigen
 			roboInfo.UpdateScanMap(this.scanMap);
@@ -117,7 +130,7 @@ public class ScanAlgorithm extends Thread {
 				List<Position> routeToNextCell = PathIO.CalculatePath(this.scanMap.map, route, new A_Star());
 				
 				// TChecken ob die Route mind. 2 einträge hat
-				if (routeToNextCell.size() >= 1)
+				if (routeToNextCell.size() >= 2)
 				{			
 					System.out.println("pl " + routeToNextCell.size());
 
@@ -138,7 +151,8 @@ public class ScanAlgorithm extends Thread {
 				{
 					// Punkt ist nicht erreichbar
 					// Punkt auf unscnnned setzen
-					this.scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Set_State(Fieldstate.unscanned);
+					//this.scanMap.map.Get_Fields()[freeCells.get(i).Get_X()][freeCells.get(i).Get_Y()].Set_State(Fieldstate.unscanned);
+					this.scanMap.map.GetFieldByPosition(freeCells.get(i)).Set_State(Fieldstate.unscanned);
 				}
 				
 				i++;
@@ -149,6 +163,7 @@ public class ScanAlgorithm extends Thread {
 			{
 				// TODO: Nächstes freies, ungescanntes Feld anfahren
 				// Route abfahren
+				shortestRoute.remove(0);
 				shortestRoute = this.scanMap.map.ConvertFromArrayToRelativePositions(shortestRoute);
 				
 				roboInfo.DriveRobotRoute(new Route(shortestRoute));

@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import javax.print.attribute.standard.DateTimeAtCompleted;
+
 import Serialize.Map;
 import Serialize.RoboStatus;
 import Serialize.Route;
@@ -152,6 +154,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	@Override
 	public void DriveDistanceForward(float distance) {
 		this.currentMovement = MovementMode.Drive;
+		Log("drive forward: " + distance);
 		
 		this.plannedMove = new PlannedMovement(this.currentMovement, distance);
 		
@@ -161,6 +164,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	@Override
 	public void DriveDistanceBackward(float distance) {
 		this.currentMovement = MovementMode.Drive;
+		Log("drive backward: " + distance);
 		
 		this.plannedMove = new PlannedMovement(this.currentMovement, distance);
 		
@@ -169,20 +173,78 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 
 	@Override
 	public void TurnLeftByDegrees(float degrees) {
-		this.currentMovement = MovementMode.Rotate;
+		degrees = degrees % 360;
 		
-		this.plannedMove = new PlannedMovement(this.currentMovement, degrees);
+		if ((int)degrees == 0)
+		{
+			return;
+		}
 		
-		this.driving.TurnLeftByDegrees(degrees, false);
+		if (Math.abs(degrees) > 180.0F)
+		{
+			if (degrees < 0)
+			{
+				this.TurnLeftByDegrees(degrees + 360.0F);
+			}
+			else
+			{
+				this.TurnLeftByDegrees(degrees - 360.0F);
+			}
+		}
+		else
+		{
+			if (degrees < 0)
+			{
+				this.TurnRightByDegrees(degrees * -1.0F);
+			}
+			else
+			{
+				this.currentMovement = MovementMode.Rotate;
+				Log("rotate left: " + degrees);
+				
+				this.plannedMove = new PlannedMovement(this.currentMovement, degrees);
+				
+				this.driving.TurnLeftByDegrees(degrees, false);	
+			}
+		}
 	}
 
 	@Override
 	public void TurnRightByDegrees(float degrees) {
-		this.currentMovement = MovementMode.Rotate;
+		degrees = degrees % 360;
 		
-		this.plannedMove = new PlannedMovement(this.currentMovement, degrees);
+		if ((int)degrees == 0)
+		{
+			return;
+		}
 		
-		this.driving.TurnRightByDegrees(degrees, false);
+		if (Math.abs(degrees) > 180.0F)
+		{
+			if (degrees < 0)
+			{
+				this.TurnRightByDegrees(degrees + 360.0F);	
+			}
+			else
+			{
+				this.TurnRightByDegrees(degrees - 360.0F);
+			}
+		}
+		else
+		{
+			if (degrees < 0)
+			{
+				this.TurnLeftByDegrees(degrees * -1.0F);
+			}
+			else
+			{
+				this.currentMovement = MovementMode.Rotate;
+				Log("rotate right: " + degrees);
+				
+				this.plannedMove = new PlannedMovement(this.currentMovement, degrees);
+				
+				this.driving.TurnRightByDegrees(degrees, false);
+			}
+		}
 	}
 
 	@Override
@@ -235,6 +297,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 
 	@Override
 	public void Stop() {
+		Log("stop");
 		this.driving.Stop();
 	}
 
@@ -270,8 +333,9 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		this.TurnLeftByDegrees(diff);
 	}
 
+	// Returning the distance is a temporary solution
 	@Override
-	public void DriveToPosition(Point position) {
+	public float DriveToPosition(Point position) {
 		float a = position.x - this.position.x;
 		float g = position.y - this.position.y;
 		float h = (float)Math.sqrt(Math.pow(a, 2) + Math.pow(g, 2));
@@ -293,9 +357,6 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 			angle = angle + gyroData[0];
 			angle = angle % 360.0F;
 			
-			//System.out.println("a: " + angle);
-			this.Log("a: " + angle);
-			
 			this.TurnLeftByDegrees(angle);
 		}
 		else
@@ -304,16 +365,12 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 			angle = angle - gyroData[0];
 			angle = angle % 360.0F;
 			
-			//System.out.println("a: " + angle);
-			this.Log("a: " + angle);
-			
 			this.TurnRightByDegrees(angle);
 		}
-		
-		this.DriveDistanceForward(h);
-		
-		//System.out.println("pos reached");
-		this.Log("pos reached");
+
+		Log("drive to pos: (" + position.x + " | " + position.y + ")");
+		//this.DriveDistanceForward(h);
+		return h;
 	}
 
 	@Override
@@ -336,7 +393,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 			return data[0];
 		}
 		
-		return -1;
+		return 0;
 	}
 	
 	//
@@ -457,6 +514,10 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				
 				if (!rescued)
 				{
+					Log("obstacle detected");
+					
+					this.NotifyStopEvent();
+					
 					for (RobotStatusListener listener : listeners)
 					{
 						listener.RobotStoppedDueToObstacle(this.GetStatus());
@@ -470,6 +531,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	public void UnexpectedRotationDetected() {
 		if (this.currentMovement == MovementMode.Drive)
 		{
+			Log("unexpected rotation");
 			this.Stop();
 			
 			// rotate back			
@@ -501,12 +563,14 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				this.TurnRightByDegrees(Math.abs(diff));
 			}
 			
+			this.NotifyStopEvent();
+			
 			for (RobotStatusListener listener : listeners)
 			{
 				listener.RobotStoppedDueToObstacle(this.GetStatus());
 			}
 			
-			System.out.println("unexpected rotation detected!");
+			//System.out.println("unexpected rotation detected!");
 		}
 	}
 
@@ -514,7 +578,10 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	public void BumpedIntoObstacle() {
 		if (this.currentMovement == MovementMode.Drive)
 		{
+			Log("bumped into");
 			this.Stop();
+			
+			this.NotifyStopEvent();
 			
 			for (RobotStatusListener listener : listeners)
 			{
@@ -529,5 +596,12 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		{
 			this.logger.Log(text);
 		}
+	}
+	
+	private void NotifyStopEvent()
+	{		
+		this.rotationStopped(this.driving.GetLeft(), 
+				this.driving.GetLeft().getTachoCount(), 
+				this.driving.GetLeft().isStalled(), System.currentTimeMillis());
 	}
 }

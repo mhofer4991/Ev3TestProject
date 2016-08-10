@@ -45,6 +45,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	
 	private boolean isConnectedToRemote;
 	
+	private float wishedDegrees;
+	
 	// Manager properties
 	
 	private ManagerState currentState;
@@ -52,10 +54,12 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	// Scan algorithm
 	private ScanAlgorithm autoScanAlgorithm;
 	
+	
 	public Manager(Robot managedRobot)
 	{
 		this.managedRobot = managedRobot;
 		this.managedRobot.AddListener(this);
+		this.managedRobot.SetLogger(this);
 		this.lastRobotPosition = this.managedRobot.GetPosition();
 		
 		this.remoteServer = new RemoteControlServer(this);
@@ -126,7 +130,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	@Override
 	public void RobotStoppedDueToObstacle(RoboStatus status) {
 		if (this.currentState == ManagerState.AutoScan)
-		{
+		{				
+			this.AutomaticScanModeExited();
+			
 			Position pos = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
 			Position arrPos = scannedMap.map.GetIndex(pos.Get_X(), pos.Get_Y());
 			
@@ -134,9 +140,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			
 			this.remoteServer.SendMapUpdate(scannedMap.map);
 			
-			this.AutomaticScanModeExited();
-			
 			this.managedRobot.DriveDistanceBackward(0.5F);
+			
+			Log("prepare to restart auto mode");
 			
 			this.AutomaticScanModeStarted();
 		}
@@ -167,6 +173,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			System.out.println("manual start");
 			
 			// Reset map?????
+			this.wishedDegrees = this.managedRobot.GetRotation();
 			this.managedRobot.SetCollisionCheck(false);
 		}
 	}
@@ -189,7 +196,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			System.out.println("auto start");
 			
 			// Reset map?????
-			this.managedRobot.SetCollisionCheck(false);
+			this.managedRobot.SetCollisionCheck(true);
 			
 			this.autoScanAlgorithm = new ScanAlgorithm(this.scannedMap, this);
 			
@@ -210,18 +217,16 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			this.currentState = ManagerState.Idle;
 			
 			System.out.println("auto exit");
-			
-			this.managedRobot.Stop();
+
+			this.autoScanAlgorithm.Abort();
 			
 			this.CancelRoute();
 			
 			if (this.autoScanAlgorithm != null)
 			{
-				
 				try {
 		            if (this.autoScanAlgorithm.isAlive())
 		            {
-		    			this.autoScanAlgorithm.Abort();
 		            	this.autoScanAlgorithm.interrupt();
 						this.autoScanAlgorithm.join();
 		            }
@@ -259,7 +264,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void TurnRobotLeft(float degrees) {
-		this.managedRobot.TurnLeftByDegrees(degrees);
+		wishedDegrees -= degrees;
+		//this.managedRobot.TurnLeftByDegrees(degrees);
+		this.managedRobot.RotateToDegrees(wishedDegrees);
 	}
 
 	@Override
@@ -269,7 +276,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void TurnRobotRight(float degrees) {
-		this.managedRobot.TurnRightByDegrees(degrees);
+		wishedDegrees += degrees;
+		//this.managedRobot.TurnRightByDegrees(degrees);
+		this.managedRobot.RotateToDegrees(wishedDegrees);
 	}
 
 	@Override
@@ -292,8 +301,10 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		if (!this.managedRobot.IsMoving())
 		{
 			start = new Position((int)(Math.round(this.lastRobotPosition.x / cellStep)), (int)(Math.round(this.lastRobotPosition.y / cellStep)));
+			float temp = this.managedRobot.GetRotation();
 			
 			// First
+			this.managedRobot.RotateToDegrees(0);
 			rotation = this.managedRobot.GetRotation();
 			distance = managedRobot.ScanDistance() / cellStep;
 			
@@ -303,7 +314,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			}
 			
 			// Second
-			managedRobot.TurnRightByDegrees(90);
+			//managedRobot.TurnRightByDegrees(90);
+			this.managedRobot.RotateToDegrees(90);
 			rotation = this.managedRobot.GetRotation();
 			distance = managedRobot.ScanDistance() / cellStep;
 			
@@ -313,7 +325,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			}
 			
 			// Third
-			managedRobot.TurnRightByDegrees(90);
+			//managedRobot.TurnRightByDegrees(90);
+			this.managedRobot.RotateToDegrees(180);
 			rotation = this.managedRobot.GetRotation();
 			distance = managedRobot.ScanDistance() / cellStep;
 			
@@ -323,7 +336,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			}
 			
 			// Fourth
-			managedRobot.TurnRightByDegrees(90);
+			//managedRobot.TurnRightByDegrees(90);
+			this.managedRobot.RotateToDegrees(270);
 			rotation = this.managedRobot.GetRotation();
 			distance = managedRobot.ScanDistance() / cellStep;
 			
@@ -333,7 +347,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			}
 			
 			// Return to old rotation
-			managedRobot.TurnRightByDegrees(90);
+			//managedRobot.TurnRightByDegrees(90);
+			managedRobot.RotateToDegrees(temp);
 			
 			// Send the result to the remote server
 			this.remoteServer.SendMapUpdate(scannedMap.map);
@@ -436,6 +451,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	{
         if (this.travelThread != null)
         {
+			//this.managedRobot.Stop();
+			
 	    	try {
 	            if (this.travelThread.IsRunning())
 	            {
@@ -456,23 +473,23 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void RotateRobotTo(float degrees) {
-		this.managedRobot.RotateToDegrees(degrees);
+		if (!this.autoScanAlgorithm.IsAborted())
+		{
+			this.managedRobot.RotateToDegrees(degrees);
+		}
 	}
 
 	@Override
-	public void DriveRobotTo(Position position) {
-		// TODO:
-		// Remove probably?????
-	}
-
-	@Override
-	public void DriveRobotRoute(Route route) {		
-		try {
-			this.StartRoute(route, false);
-			
-			this.travelThread.join();
-		} catch (InterruptedException e) {
-			//e.printStackTrace();
+	public void DriveRobotRoute(Route route) {
+		if (!this.autoScanAlgorithm.IsAborted())
+		{
+			try {
+				this.StartRoute(route, false);
+				
+				this.travelThread.join();
+			} catch (InterruptedException e) {
+				//e.printStackTrace();
+			}
 		}
 	}
 
@@ -487,7 +504,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			return calc;
 		}
 
-		return -1;
+		return 0;
 	}
 
 	@Override
