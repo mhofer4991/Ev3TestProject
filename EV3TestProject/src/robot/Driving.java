@@ -16,7 +16,7 @@ public class Driving {
 		this.left = left;
 		this.right = right;
 		
-		//this.left.synchronizeWith(new RegulatedMotor[] { right});
+		this.left.synchronizeWith(new RegulatedMotor[] { right});
 	}
 	
 	public RegulatedMotor GetLeft()
@@ -31,32 +31,32 @@ public class Driving {
 	
 	public void DriveForward()
 	{
-		//this.left.startSynchronization();
+		this.left.startSynchronization();
 
 		this.left.forward();
 		this.right.forward();
 		
-		//this.left.endSynchronization();
+		this.left.endSynchronization();
 	}
 	
 	public void DriveBackward()
 	{
-		//this.left.startSynchronization();
+		this.left.startSynchronization();
 
 		this.left.backward();
 		this.right.backward();
 		
-		//this.left.endSynchronization();
+		this.left.endSynchronization();
 	}
 	
 	public void DriveForward(int motorDegrees, boolean immediateReturn)
 	{
-		//this.left.startSynchronization();
+		this.left.startSynchronization();
 		
 		this.left.rotate(motorDegrees, true);
 		this.right.rotate(motorDegrees);
 		
-		//this.left.endSynchronization();
+		this.left.endSynchronization();
 		
 		if (!immediateReturn)
 		{
@@ -82,32 +82,32 @@ public class Driving {
 	
 	public void TurnRight()
 	{
-		//this.left.startSynchronization();
+		this.left.startSynchronization();
 
 		this.left.forward();
 		this.right.backward();
 		
-		//this.left.endSynchronization();
+		this.left.endSynchronization();
 	}
 	
 	public void TurnLeft()
 	{
-		//this.left.startSynchronization();
+		this.left.startSynchronization();
 
 		this.left.backward();
 		this.right.forward();
 		
-		//this.left.endSynchronization();
+		this.left.endSynchronization();
 	}
 	
 	public void TurnRight(int motorDegrees, boolean immediateReturn)
 	{
-		//this.left.startSynchronization();
+		this.left.startSynchronization();
 		
 		this.left.rotate(motorDegrees, true);
 		this.right.rotate(motorDegrees * -1);
 		
-		//this.left.endSynchronization();
+		this.left.endSynchronization();
 		
 		if (!immediateReturn)
 		{
@@ -133,7 +133,7 @@ public class Driving {
 	
 	public void Stop()
 	{
-		//this.left.startSynchronization();
+		this.left.startSynchronization();
 
 		//this.left.flt(true);
 		//this.right.flt(false);
@@ -141,7 +141,7 @@ public class Driving {
 		this.left.stop(true);
 		this.right.stop(false);
 		
-		//this.left.endSynchronization();
+		this.left.endSynchronization();
 		
 		this.left.waitComplete();
 		this.right.waitComplete();

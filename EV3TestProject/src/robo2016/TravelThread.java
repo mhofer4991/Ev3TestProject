@@ -55,8 +55,29 @@ public class TravelThread extends Thread {
 				if (this.running)
 				{
 					this.currentDestination = pos;
+
+					float a = pos.x - this.controllable.GetPosition().x;
+					float g = pos.y - this.controllable.GetPosition().y;
+					float h = (float)Math.sqrt(Math.pow(a, 2) + Math.pow(g, 2));
 					
-	            	float d = this.controllable.DriveToPosition(pos);
+					float angle = (float) (Math.acos(g / h) * (180 / Math.PI));
+					
+					if (a < 0)
+					{
+						angle *= -1.0F;
+					}
+
+					if (this.running)
+					{
+						this.controllable.RotateToDegrees(angle);	
+					}
+					
+					if (this.running)
+					{
+						this.controllable.DriveDistanceForward(h);
+					}
+					
+	            	/*float d = this.controllable.DriveToPosition(pos);
 	            	
 	            	// TODO:
 	            	// change this
@@ -64,7 +85,7 @@ public class TravelThread extends Thread {
 	            	if (this.running)
 	            	{
 	            		this.controllable.DriveDistanceForward(d);
-	            	}
+	            	}*/
 				}
             }
 		}

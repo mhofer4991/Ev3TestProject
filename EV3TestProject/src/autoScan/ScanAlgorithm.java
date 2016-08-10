@@ -168,6 +168,10 @@ public class ScanAlgorithm extends Thread {
 				
 				roboInfo.DriveRobotRoute(new Route(shortestRoute));
 			}
+			else
+			{
+				this.roboInfo.ScanFinished();
+			}
 		}		
 	}
 	

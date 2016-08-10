@@ -93,6 +93,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		this.calibratingUtil = new CalibratingUtil(this.GetDriving(), gyro, ultra);
 	}
 	
+	@Override
 	public Point GetPosition()
 	{
 		return this.position;
@@ -334,20 +335,23 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	}
 
 	// Returning the distance is a temporary solution
-	@Override
+	// TODO:
+	// Move it to travelthread because of better checking 
+	// if route is cancelled
+	/*@Override
 	public float DriveToPosition(Point position) {
 		float a = position.x - this.position.x;
 		float g = position.y - this.position.y;
 		float h = (float)Math.sqrt(Math.pow(a, 2) + Math.pow(g, 2));
 		
 		float angle = (float) (Math.acos(g / h) * (180 / Math.PI));
-		
+		*/
 		/*if (g < 0)
 		{
 			angle = 180 - angle;
 		}*/
 		
-		float[] gyroData = new float[1];
+		/*float[] gyroData = new float[1];
 		
 		gyro.getAngleMode().fetchSample(gyroData, 0);		
 		
@@ -366,12 +370,18 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 			angle = angle % 360.0F;
 			
 			this.TurnRightByDegrees(angle);
+		}*/
+		/*if (a < 0)
+		{
+			angle *= -1.0F;
 		}
+
+		this.RotateToDegrees(angle);
 
 		Log("drive to pos: (" + position.x + " | " + position.y + ")");
 		//this.DriveDistanceForward(h);
 		return h;
-	}
+	}*/
 
 	@Override
 	public float ScanDistance() {

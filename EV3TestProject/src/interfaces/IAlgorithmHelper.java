@@ -11,4 +11,6 @@ public interface IAlgorithmHelper {
 	int MeasureDistance();
 	
 	void UpdateScanMap(ScanMap map);
+	
+	void ScanFinished();
 }

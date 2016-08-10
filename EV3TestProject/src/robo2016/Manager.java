@@ -32,6 +32,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	
 	private Point lastRobotPosition;
 	
+	//private List<Point> movingHistory;
+	
 	private float cellStep = 0.5F;
 	
 	// Travelling
@@ -61,6 +63,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		this.managedRobot.AddListener(this);
 		this.managedRobot.SetLogger(this);
 		this.lastRobotPosition = this.managedRobot.GetPosition();
+		//this.movingHistory = new ArrayList<Point>();
 		
 		this.remoteServer = new RemoteControlServer(this);
 		
@@ -85,11 +88,6 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void RobotStatusUpdated(RoboStatus status) {
-		// TODO:
-		// check if manual or automatic
-		// if manual calculate start end and add it to scanned map
-		// if automatic notify automatic scan algorithm
-		
 		if (this.isConnectedToRemote)
 		{
 			this.remoteServer.SendRoboStatus(managedRobot.GetStatus());
@@ -99,8 +97,10 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		{
 			// In manual mode we track each position change 
 			// and add it to the map
-			Position start = new Position((int)(Math.round(this.lastRobotPosition.x / cellStep)), (int)(Math.round(this.lastRobotPosition.y / cellStep)));
-			Position end = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
+			//Position start = new Position((int)(Math.round(this.movingHistory.get(0).x / cellStep)), (int)(Math.round(this.movingHistory.get(0).y / cellStep)));
+			//Position end = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
+			Position start = this.ConvertFromAbsoluteToRelative(lastRobotPosition);
+			Position end = this.ConvertFromAbsoluteToRelative(new Point(status.X, status.Y));
 			
 			if (Math.sqrt(Math.pow(start.Get_X() - end.Get_X(), 2) + Math.pow(start.Get_Y() - end.Get_Y(), 2)) > 0)
 			{
@@ -116,7 +116,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		else if (this.currentState == ManagerState.AutoScan)
 		{
 			// Notify algorithm
-			Position pos = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
+			//Position pos = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
+			Position pos = this.ConvertFromAbsoluteToRelative(new Point(status.X, status.Y));
 			
 			if (this.autoScanAlgorithm != null)
 			{
@@ -133,13 +134,16 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		{				
 			this.AutomaticScanModeExited();
 			
-			Position pos = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
-			Position arrPos = scannedMap.map.GetIndex(pos.Get_X(), pos.Get_Y());
+			//Position pos = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
+			//Position arrPos = scannedMap.map.GetIndex(pos.Get_X(), pos.Get_Y());
+			//this.scannedMap.map.Get_Fields()[arrPos.Get_X()][arrPos.Get_Y()].Set_State(Fieldstate.occupied);
+			Position pos = this.ConvertFromAbsoluteToRelative(new Point(status.X, status.Y));
 			
-			this.scannedMap.map.Get_Fields()[arrPos.Get_X()][arrPos.Get_Y()].Set_State(Fieldstate.occupied);
+			this.scannedMap.map.GetFieldByRelativePosition(pos).Set_State(Fieldstate.occupied);
 			
 			this.remoteServer.SendMapUpdate(scannedMap.map);
 			
+			// Better: drive to another position
 			this.managedRobot.DriveDistanceBackward(0.5F);
 			
 			Log("prepare to restart auto mode");
@@ -200,9 +204,10 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			
 			this.autoScanAlgorithm = new ScanAlgorithm(this.scannedMap, this);
 			
-			Position pos = new Position(
-					(int)(Math.round(lastRobotPosition.getX() / cellStep)), 
-					(int)(Math.round(lastRobotPosition.getY() / cellStep)));
+			/*Position pos = new Position(
+					(int)(Math.round(managedRobot.GetPosition().getX() / cellStep)), 
+					(int)(Math.round(managedRobot.GetPosition().getY() / cellStep)));*/
+			Position pos = this.ConvertFromAbsoluteToRelative(managedRobot.GetPosition());
 			
 			this.autoScanAlgorithm.UpdateRoboPosition(pos);
 			
@@ -300,13 +305,15 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		
 		if (!this.managedRobot.IsMoving())
 		{
-			start = new Position((int)(Math.round(this.lastRobotPosition.x / cellStep)), (int)(Math.round(this.lastRobotPosition.y / cellStep)));
+			//start = new Position((int)(Math.round(this.managedRobot.GetPosition().x / cellStep)), (int)(Math.round(this.managedRobot.GetPosition().y / cellStep)));
+			start = this.ConvertFromAbsoluteToRelative(managedRobot.GetPosition());
 			float temp = this.managedRobot.GetRotation();
 			
 			// First
 			this.managedRobot.RotateToDegrees(0);
 			rotation = this.managedRobot.GetRotation();
-			distance = managedRobot.ScanDistance() / cellStep;
+			//distance = managedRobot.ScanDistance() / cellStep;
+			distance = this.MeasureDistance();
 			
 			if (distance > 0)
 			{
@@ -317,7 +324,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			//managedRobot.TurnRightByDegrees(90);
 			this.managedRobot.RotateToDegrees(90);
 			rotation = this.managedRobot.GetRotation();
-			distance = managedRobot.ScanDistance() / cellStep;
+			//distance = managedRobot.ScanDistance() / cellStep;
+			distance = this.MeasureDistance();
 			
 			if (distance > 0)
 			{
@@ -328,7 +336,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			//managedRobot.TurnRightByDegrees(90);
 			this.managedRobot.RotateToDegrees(180);
 			rotation = this.managedRobot.GetRotation();
-			distance = managedRobot.ScanDistance() / cellStep;
+			//distance = managedRobot.ScanDistance() / cellStep;
+			distance = this.MeasureDistance();
 			
 			if (distance > 0)
 			{
@@ -339,7 +348,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			//managedRobot.TurnRightByDegrees(90);
 			this.managedRobot.RotateToDegrees(270);
 			rotation = this.managedRobot.GetRotation();
-			distance = managedRobot.ScanDistance() / cellStep;
+			//distance = managedRobot.ScanDistance() / cellStep;
+			distance = this.MeasureDistance();
 			
 			if (distance > 0)
 			{
@@ -370,7 +380,6 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		this.currentState = ManagerState.TravelRoute;
 		
 		System.out.println(request.TravelledRoute.Get_Route().size());
-		System.out.println("> " + request.TravelledMap.Get_Fields()[0][0].Get_State().ordinal());
 		System.out.println("> " + request.TravelledMap.Get_Fields()[1][1].Get_State().ordinal());
 
 		// Convert from relative coordinates to array indices 
@@ -436,7 +445,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
         
         for (Position pos : route.Get_Route())
         {
-        	Point n = new Point((float)pos.Get_X() * cellStep, (float)pos.Get_Y() * cellStep);
+        	//Point n = new Point((float)pos.Get_X() * cellStep, (float)pos.Get_Y() * cellStep);
+        	Point n = this.ConvertFromRelativeToAbsolute(pos);
         	
         	convertedToAbsolute.add(n);
         }
@@ -467,8 +477,24 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
         }
 	}
 	
+	private Position ConvertFromAbsoluteToRelative(Point absolutePosition)
+	{
+		return new Position(
+				(int)(Math.round(absolutePosition.x / cellStep)), 
+				(int)(Math.round(absolutePosition.y / cellStep)));
+	
+	}
+	
+	private Point ConvertFromRelativeToAbsolute(Position relativePosition)
+	{
+		return new Point(
+				(float)relativePosition.Get_X() * cellStep, 
+				(float)relativePosition.Get_Y() * cellStep);
+	}
+	
 	//
 	// Algorithm helper
+	// Algorithm _only_ uses relative coordinates; not absolute!
 	//
 
 	@Override
@@ -486,6 +512,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			try {
 				this.StartRoute(route, false);
 				
+				// The algorithm has to wait until the route is finished.
 				this.travelThread.join();
 			} catch (InterruptedException e) {
 				//e.printStackTrace();
@@ -512,6 +539,11 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		this.scannedMap = map;
 		
 		this.remoteServer.SendMapUpdate(this.scannedMap.map);
+	}
+
+	@Override
+	public void ScanFinished() {
+		this.AutomaticScanModeExited();
 	}
 	
 	//
