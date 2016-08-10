@@ -58,7 +58,7 @@ public class ScanAlgorithm extends Thread {
 			ArrayList<Integer> directions = new ArrayList<Integer>();
 			for (int i = 0; i < 4; i++)
 			{							
-				if (CheckUnscannd(roboPosition, i))
+				if (CheckUnscannd(scanMap.map.GetIndex(roboPosition.Get_X(), roboPosition.Get_Y()), i))
 				{
 					directions.add(i);
 				}
@@ -68,7 +68,8 @@ public class ScanAlgorithm extends Thread {
 			{
 				// Scan to direction -> directions[i];
 				// 0 up, 1 right, 2 down, 3 left
-				int direction = 90 * i;
+				//int direction = 90 * i;
+				int direction = directions.get(i) * 90;
 				
 				// RotateTo Degrees
 				roboInfo.RotateRobotTo(direction);
@@ -196,10 +197,10 @@ public class ScanAlgorithm extends Thread {
 		{
 			case free:
 				return true;
-			case freeScanned:
-				return false;
 			case unscanned:
 				return true;
+			case freeScanned:
+				return false;
 			case occupied:
 				return false;	
 			default:

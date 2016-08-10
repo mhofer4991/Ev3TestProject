@@ -11,6 +11,7 @@ import Serialize.RoboStatus;
 import Serialize.Route;
 import calibrating.CalibratingUtil;
 import interfaces.IAlgorithmHelper;
+import interfaces.ILogger;
 import interfaces.RemoteControlListener;
 import interfaces.RobotStatusListener;
 import lejos.robotics.geometry.Point;
@@ -24,7 +25,7 @@ import pathfinding.PathAlgorithm;
 import pathfinding.PathIO;
 import robot.Robot;
 
-public class Manager implements RemoteControlListener, RobotStatusListener, IAlgorithmHelper {
+public class Manager implements RemoteControlListener, RobotStatusListener, IAlgorithmHelper, ILogger {
 	private Robot managedRobot;
 	
 	private ScanMap scannedMap;
@@ -494,5 +495,17 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		this.scannedMap = map;
 		
 		this.remoteServer.SendMapUpdate(this.scannedMap.map);
+	}
+	
+	//
+	// Logging
+	//
+
+	@Override
+	public void Log(String text) {
+		if (this.isConnectedToRemote)
+		{
+			this.remoteServer.SendLog(text);
+		}
 	}
 }

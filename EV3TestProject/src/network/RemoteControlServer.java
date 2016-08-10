@@ -48,6 +48,8 @@ public class RemoteControlServer extends Thread {
     public final static byte MSGCODE_ROBOT_START_AUTO_SCAN_MODE = 13;
 
     public final static byte MSGCODE_ROBOT_EXIT_AUTO_SCAN_MODE = 14;
+    
+    public final static byte MSGCODE_ROBOT_LOG = 15;
 	
 	private RemoteControlListener listener;
 	
@@ -133,17 +135,8 @@ public class RemoteControlServer extends Thread {
 	// Send methods
 	//
 	
-	/*
-	 * Much thanks to 
-	 * http://stackoverflow.com/questions/5865728/bitconverter-for-java
-	 * http://stackoverflow.com/questions/5918133/different-results-when-converting-int-to-byte-array-net-vs-java
-	 */
 	public void SendRoboStatus(RoboStatus status)
-	{		
-		/*String data = Helper.GetObjectAsString(status);
-		byte[] bd = data.getBytes();
-			
-		this.SendData(MSGCODE_ROBOT_STATUS_UPDATE, bd);*/
+	{
 		this.SendMessage(MSGCODE_ROBOT_STATUS_UPDATE, status);
 	}
 	
@@ -155,6 +148,11 @@ public class RemoteControlServer extends Thread {
 	public void SendMapUpdate(Map map)
 	{
 		this.SendMessage(MSGCODE_ROBOT_SCAN_MAP_UPDATE, map);
+	}
+	
+	public void SendLog(String text)
+	{
+		this.SendMessage(MSGCODE_ROBOT_LOG, text);
 	}
 	
 	public void SendMessage(byte code, Object msg)

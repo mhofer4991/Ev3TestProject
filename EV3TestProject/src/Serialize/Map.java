@@ -65,6 +65,11 @@ public class Map {
 		return converted;
 	}
 	
+	public Field GetFieldByPosition(Position pos)
+	{
+		return this.Get_Fields()[pos.Get_X()][pos.Get_Y()];
+	}
+	
 	public Field GetFieldByRelativePosition(Position relPos)
 	{
 		Position newPos = GetIndex(relPos.Get_X(), relPos.Get_Y());

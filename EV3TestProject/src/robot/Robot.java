@@ -11,6 +11,7 @@ import Serialize.Route;
 import calibrating.CalibratingUtil;
 import interfaces.CollisionListener;
 import interfaces.IControllable;
+import interfaces.ILogger;
 import interfaces.RemoteControlListener;
 import interfaces.RobotStatusListener;
 import Serialize.TravelRequest;
@@ -46,8 +47,6 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	
 	private float lastRotation;
 	
-	private boolean waitForPositionRefresh;
-	
 	// collision detection
 	private CollisionThread collisionThread;
 	
@@ -60,6 +59,9 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	private PlannedMovement plannedMove;
 
 	private CalibratingUtil calibratingUtil;
+	
+	// Logging
+	private ILogger logger;
 		
 	public Robot()
 	{
@@ -116,6 +118,11 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	public void AddListener(RobotStatusListener listener)
 	{
 		this.listeners.add(listener);
+	}
+	
+	public void SetLogger(ILogger logger)
+	{
+		this.logger = logger;
 	}
 	
 	public RoboStatus GetStatus()
@@ -284,6 +291,10 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		{
 			// Consider robots current position
 			angle = angle + gyroData[0];
+			angle = angle % 360.0F;
+			
+			//System.out.println("a: " + angle);
+			this.Log("a: " + angle);
 			
 			this.TurnLeftByDegrees(angle);
 		}
@@ -291,12 +302,18 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		{
 			// Consider robots current position
 			angle = angle - gyroData[0];
-			System.out.println(angle);
+			angle = angle % 360.0F;
+			
+			//System.out.println("a: " + angle);
+			this.Log("a: " + angle);
 			
 			this.TurnRightByDegrees(angle);
 		}
 		
 		this.DriveDistanceForward(h);
+		
+		//System.out.println("pos reached");
+		this.Log("pos reached");
 	}
 
 	@Override
@@ -348,16 +365,16 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	@Override
 	public void rotationStopped(RegulatedMotor motor, int tachoCount, boolean stalled, long timeStamp) {
 		if (this.currentMovement == MovementMode.Drive || this.currentMovement == MovementMode.Rotate)
-		{
+		{	
+			// TODO:
+			// Is this safe?
+			if (this.checkForCollisions)
+			{
+				this.collisionThread.WatchForObstacles(false);
+			}
+			
 			if (this.currentMovement == MovementMode.Drive)
-			{		
-				// TODO:
-				// Is this safe?
-				if (this.checkForCollisions)
-				{
-					this.collisionThread.WatchForObstacles(false);
-				}	
-				
+			{	
 				// TODO:
 				// What to do with very small deltas?
 				int delta = tachoCount - lastTachoCount;
@@ -387,7 +404,6 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				listener.RobotStatusUpdated(status);
 			}
 			
-			this.waitForPositionRefresh = false;
 			this.currentMovement = MovementMode.Idle;
 		}
 	}
@@ -504,6 +520,14 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 			{
 				listener.RobotStoppedDueToObstacle(this.GetStatus());
 			}
+		}
+	}
+	
+	private void Log(String text)
+	{
+		if (this.logger != null)
+		{
+			this.logger.Log(text);
 		}
 	}
 }
