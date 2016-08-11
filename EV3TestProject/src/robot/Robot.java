@@ -54,7 +54,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	
 	private boolean checkForCollisions;
 	
-	private boolean waitObstacle;
+	private boolean awaitsObstacle;
 	
 	private boolean obstacleMoved;
 	
@@ -97,24 +97,9 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		this.calibratingUtil = new CalibratingUtil(this.GetDriving(), gyro, ultra);
 	}
 	
-	@Override
-	public Point GetPosition()
-	{
-		return this.position;
-	}
-	
 	public Driving GetDriving()
 	{
 		return this.driving;
-	}
-	
-	public float GetRotation()
-	{
-		float[] data = new float[1];
-		
-		gyro.getAngleMode().fetchSample(data, 0);
-		
-		return data[0];
 	}
 	
 	public void SetCollisionCheck(boolean check)
@@ -130,6 +115,11 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	public void SetLogger(ILogger logger)
 	{
 		this.logger = logger;
+	}
+	
+	public void ObstacleGone()
+	{
+		this.awaitsObstacle = false;
 	}
 	
 	public RoboStatus GetStatus()
@@ -157,6 +147,22 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	//
 
 	@Override
+	public float GetRotation()
+	{
+		float[] data = new float[1];
+		
+		gyro.getAngleMode().fetchSample(data, 0);
+		
+		return data[0];
+	}
+	
+	@Override
+	public Point GetPosition()
+	{
+		return this.position;
+	}
+
+	@Override
 	public synchronized void DriveDistanceForward(float distance) {
 		this.currentMovement = MovementMode.Drive;
 		Log("drive forward: " + distance);
@@ -167,7 +173,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		
 		// If driving forward, it could happen that
 		// we have to wait for an obstacle to move away
-		while (waitObstacle)
+		while (awaitsObstacle)
 		{
 			//this.driving.GetLeft().waitComplete();
 			//this.driving.GetRight().waitComplete();
@@ -503,10 +509,10 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 			{
 				// Just drive along
 			}
-			else if (!waitObstacle)
+			else if (!awaitsObstacle)
 			{
 				// Only go on if not already waiting for obstacle
-				this.waitObstacle = true;
+				this.awaitsObstacle = true;
 				this.Stop();
 				
 				// Wait for the obstacle to move away.
@@ -530,7 +536,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 						obstacleMoved = true;
 						this.plannedMove = new PlannedMovement(MovementMode.Drive, leftDistance);
 						
-						waitObstacle = false;
+						awaitsObstacle = false;
 						/*
 						// TODO:
 						// Better solution?
@@ -575,7 +581,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 						listener.RobotStoppedDueToObstacle(this.GetStatus(), obstaclePosition);
 					}
 
-					this.waitObstacle = false;
+					//this.awaitsObstacle = false;
 				}
 			}
 		}
@@ -586,7 +592,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		if (this.currentMovement == MovementMode.Drive)
 		{
 			Log("unexpected rotation");
-			this.waitObstacle = true;
+			this.awaitsObstacle = true;
 			this.Stop();
 			
 			// rotate back			
@@ -625,7 +631,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				listener.RobotStoppedDueToObstacle(this.GetStatus(), this.GetPosition());
 			}
 			
-			this.waitObstacle = false;
+			//this.awaitsObstacle = false;
 			
 			//System.out.println("unexpected rotation detected!");
 		}
@@ -636,7 +642,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		if (this.currentMovement == MovementMode.Drive)
 		{
 			Log("bumped into");
-			this.waitObstacle = true;
+			this.awaitsObstacle = true;
 			this.Stop();
 			
 			this.NotifyStopEvent();
@@ -646,7 +652,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				listener.RobotStoppedDueToObstacle(this.GetStatus(), this.GetPosition());
 			}
 
-			this.waitObstacle = false;
+			//this.awaitsObstacle = false;
 		}
 	}
 	

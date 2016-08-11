@@ -144,6 +144,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		if (this.currentState == ManagerState.AutoScan)
 		{				
 			this.AutomaticScanModeExited();
+			this.managedRobot.ObstacleGone();
 			
 			//Position pos = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
 			//Position arrPos = scannedMap.map.GetIndex(pos.Get_X(), pos.Get_Y());
@@ -165,8 +166,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		else if (this.currentState == ManagerState.TravelRoute)
 		{
 			Log("obstacle while travel");
-			
-			this.CancelRoute();
+
+			this.CancelRouteRequested();
+			this.managedRobot.ObstacleGone();
 			
 			// Update scan map
 			//this.scannedMap.map.GetFieldByRelativePosition(relObstaclePos).Set_State(Fieldstate.occupied);
@@ -188,6 +190,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 				{
 					Position pos = travelRequest.TravelledRoute.Get_Route().get(i);
 					
+					// Ignore points, which are equal and in a row
 					if (newRoute.get(newRoute.size() - 1).Get_X() != pos.Get_X() ||
 						newRoute.get(newRoute.size() - 1).Get_Y() != pos.Get_Y())
 					{
@@ -199,6 +202,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 				{
 					Position pos = travelRequest.TravelledRoute.Get_Route().get(i);
 					
+					// Ignore points, which are equal and in a row
 					if (newRoute.get(newRoute.size() - 1).Get_X() != pos.Get_X() ||
 						newRoute.get(newRoute.size() - 1).Get_Y() != pos.Get_Y())
 					{
@@ -304,7 +308,10 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			
 			System.out.println("auto exit");
 
-			this.autoScanAlgorithm.Abort();
+			if (this.autoScanAlgorithm != null)
+			{
+				this.autoScanAlgorithm.Abort();
+			}
 			
 			this.CancelRoute();
 			
@@ -519,6 +526,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
     		// Switch to travel mode
     		this.currentState = ManagerState.TravelRoute;
         	this.travelRequest = request;
+        	// Reset progress of the route
         	this.travelIndex = 0;
         	this.scannedMap = new ScanMap();
         	this.scannedMap.map = request.TravelledMap;
