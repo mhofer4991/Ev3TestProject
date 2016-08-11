@@ -155,7 +155,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	//
 
 	@Override
-	public void DriveDistanceForward(float distance) {
+	public synchronized void DriveDistanceForward(float distance) {
 		this.waitObstacle = false;
 		this.currentMovement = MovementMode.Drive;
 		Log("drive forward: " + distance);
@@ -164,6 +164,8 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		
 		this.driving.DriveDistanceForward(distance, false);
 		
+		// If driving forward, it could happen that
+		// we have to wait for an obstacle to move away
 		while (waitObstacle)
 		{
 			this.driving.GetLeft().waitComplete();
@@ -172,7 +174,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	}
 
 	@Override
-	public void DriveDistanceBackward(float distance) {
+	public synchronized void DriveDistanceBackward(float distance) {
 		this.currentMovement = MovementMode.Drive;
 		Log("drive backward: " + distance);
 		
@@ -182,7 +184,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	}
 
 	@Override
-	public void TurnLeftByDegrees(float degrees) {
+	public synchronized void TurnLeftByDegrees(float degrees) {
 		degrees = degrees % 360;
 		
 		if ((int)degrees == 0)
@@ -220,7 +222,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	}
 
 	@Override
-	public void TurnRightByDegrees(float degrees) {
+	public synchronized void TurnRightByDegrees(float degrees) {
 		degrees = degrees % 360;
 		
 		if ((int)degrees == 0)
@@ -255,6 +257,21 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				this.driving.TurnRightByDegrees(degrees, false);
 			}
 		}
+	}
+
+	@Override
+	public synchronized void RotateToDegrees(float degrees) {
+		float[] data = new float[1];
+		
+		gyro.getAngleMode().fetchSample(data, 0);
+		
+		data[0] = data[0] % 360;
+		
+		degrees = degrees % 360;
+		
+		float diff = data[0] - degrees;
+		
+		this.TurnLeftByDegrees(diff);
 	}
 
 	@Override
@@ -313,22 +330,8 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 
 	@Override
 	public boolean IsMoving() {
-		return (driving.GetLeft().isMoving() || driving.GetRight().isMoving());
-	}
-
-	@Override
-	public void RotateToDegrees(float degrees) {
-		float[] data = new float[1];
-		
-		gyro.getAngleMode().fetchSample(data, 0);
-		
-		data[0] = data[0] % 360;
-		
-		degrees = degrees % 360;
-		
-		float diff = data[0] - degrees;
-		
-		this.TurnLeftByDegrees(diff);
+		//return (driving.GetLeft().isMoving() || driving.GetRight().isMoving());
+		return this.driving.IsMoving();
 	}
 
 	// Returning the distance is a temporary solution
@@ -387,6 +390,8 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 			float[] data = new float[1];
 			
 			ultra.getDistanceMode().fetchSample(data, 0);
+			
+			Log("scanned distance: " + data[0]);
 			
 			if (Float.isInfinite(data[0]))
 			{
@@ -495,7 +500,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				this.Stop();
 				
 				// Wait for the obstacle to move away.
-				float[] data = new float[1];
+				float scannedDistance = 0.0F;
 				boolean rescued = false;
 				
 				Log("wait for rescue");
@@ -505,18 +510,20 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 					Delay.msDelay(1000);
 					System.out.println("look...");
 					
-					ultra.getDistanceMode().fetchSample(data, 0);
+					//ultra.getDistanceMode().fetchSample(data, 0);
+					scannedDistance = this.ScanDistance();
 					
-					if (leftDistance < data[0] || data[0] > CollisionThread.MIN_DISTANCE * 2)
+					if (leftDistance < scannedDistance || scannedDistance > CollisionThread.MIN_DISTANCE * 2)
 					{
 						// TODO:
 						// Better solution?
+						rescued = true;
 						this.waitObstacle = false;
 						this.currentMovement = MovementMode.Drive;
 						
 						this.plannedMove = new PlannedMovement(this.currentMovement, leftDistance);
 						
-						// True = do not wait for finishment, because it would
+						// True = do not wait for finish, because it would
 						// block the collision watch thread.
 						this.driving.DriveDistanceForward(leftDistance, true);
 					}
@@ -524,7 +531,6 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				
 				if (!rescued)
 				{
-					this.waitObstacle = false;
 					Log("obstacle detected");
 					
 					this.NotifyStopEvent();
@@ -537,10 +543,11 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 					
 					// 0.25 = 0.5 (cellsize) / 2
 					// TODO: constant value or setter / getter
-					data[0] = data[0] + 0.25F;
+					//data[0] = data[0] + 0.25F;
+					scannedDistance += 0.25F;
 					
-					float g = (float)Math.sin(Math.toRadians(gyroData[0])) * data[0];
-					float a = (float)Math.cos(Math.toRadians(gyroData[0])) * data[0];
+					float g = (float)Math.sin(Math.toRadians(gyroData[0])) * scannedDistance;
+					float a = (float)Math.cos(Math.toRadians(gyroData[0])) * scannedDistance;
 					
 					obstaclePosition = new Point(
 							obstaclePosition.x + g, 
@@ -550,6 +557,8 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 					{
 						listener.RobotStoppedDueToObstacle(this.GetStatus(), obstaclePosition);
 					}
+
+					this.waitObstacle = false;
 				}
 			}
 		}
@@ -560,6 +569,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		if (this.currentMovement == MovementMode.Drive)
 		{
 			Log("unexpected rotation");
+			this.waitObstacle = true;
 			this.Stop();
 			
 			// rotate back			
@@ -598,6 +608,8 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				listener.RobotStoppedDueToObstacle(this.GetStatus(), this.GetPosition());
 			}
 			
+			this.waitObstacle = false;
+			
 			//System.out.println("unexpected rotation detected!");
 		}
 	}
@@ -607,6 +619,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		if (this.currentMovement == MovementMode.Drive)
 		{
 			Log("bumped into");
+			this.waitObstacle = true;
 			this.Stop();
 			
 			this.NotifyStopEvent();
@@ -615,6 +628,8 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 			{
 				listener.RobotStoppedDueToObstacle(this.GetStatus(), this.GetPosition());
 			}
+
+			this.waitObstacle = false;
 		}
 	}
 	

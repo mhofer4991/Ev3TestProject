@@ -24,15 +24,15 @@ public class ScanAlgorithm extends Thread {
 
 	public void UpdateRoboPosition(Position position)
 	{
-		/*if (roboPosition != null)
+		if (roboPosition != null)
 		{
 			//this.scanMap.map.GetFieldByRelativePosition(roboPosition).Set_State(Fieldstate.freeScanned);
-			this.scanMap.AddScanResult(position, roboPosition, Fieldstate.freeScanned);
+			this.scanMap.AddScanResult(position, roboPosition, Fieldstate.free);
 			
 			// Manager benachrichtigen
 			roboInfo.UpdateScanMap(this.scanMap);
-		}*/
-		this.abort = false;	
+		}
+		//this.abort = false;	
 		
 		this.roboPosition = position;
 	}	
@@ -132,7 +132,7 @@ public class ScanAlgorithm extends Thread {
 				// TChecken ob die Route mind. 2 einträge hat
 				if (routeToNextCell.size() >= 2)
 				{			
-					System.out.println("pl " + routeToNextCell.size());
+					//System.out.println("pl " + routeToNextCell.size());
 
 					if (shortestRoute == null)
 					{

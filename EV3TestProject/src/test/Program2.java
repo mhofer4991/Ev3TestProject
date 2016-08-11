@@ -52,7 +52,9 @@ public class Program2 {
         
         Field[][] d = new Field[2][4];
         
-        System.out.println(d[2].length);
+        //System.out.println(d[2].length);
+        
+        System.out.println(Boolean.toString(Float.NEGATIVE_INFINITY < 2));
 	}
 	
 	public static void DrawMap(ScanMap map)

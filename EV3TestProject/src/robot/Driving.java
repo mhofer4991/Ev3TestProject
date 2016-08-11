@@ -146,4 +146,9 @@ public class Driving {
 		this.left.waitComplete();
 		this.right.waitComplete();
 	}
+	
+	public synchronized boolean IsMoving()
+	{
+		return (this.left.isMoving() || this.right.isMoving());
+	}
 }

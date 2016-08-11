@@ -65,9 +65,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	private ScanAlgorithm autoScanAlgorithm;
 	
 	
-	public Manager(Robot managedRobot)
+	public Manager()
 	{
-		this.managedRobot = managedRobot;
+		this.managedRobot = new Robot();		
 		this.managedRobot.AddListener(this);
 		this.managedRobot.SetLogger(this);
 		this.lastRobotPosition = this.managedRobot.GetPosition();
@@ -150,7 +150,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			//this.scannedMap.map.Get_Fields()[arrPos.Get_X()][arrPos.Get_Y()].Set_State(Fieldstate.occupied);
 			
 			//this.scannedMap.map.GetFieldByRelativePosition(relRobotPos).Set_State(Fieldstate.occupied);
-			this.scannedMap.map.GetFieldByRelativePosition(relObstaclePos).Set_State(Fieldstate.occupied);
+			//this.scannedMap.map.GetFieldByRelativePosition(relObstaclePos).Set_State(Fieldstate.occupied);
+			this.scannedMap.AddScanResult(relObstaclePos, relObstaclePos, Fieldstate.occupied);
 			
 			this.remoteServer.SendMapUpdate(scannedMap.map);
 			
@@ -168,7 +169,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			this.CancelRoute();
 			
 			// Update scan map
-			this.scannedMap.map.GetFieldByRelativePosition(relObstaclePos).Set_State(Fieldstate.occupied);
+			//this.scannedMap.map.GetFieldByRelativePosition(relObstaclePos).Set_State(Fieldstate.occupied);
+			this.scannedMap.AddScanResult(relObstaclePos, relObstaclePos, Fieldstate.occupied);
 			
 			this.remoteServer.SendMapUpdate(scannedMap.map);
 
@@ -219,6 +221,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	public void ConnectedToRemote() {
 		this.isConnectedToRemote = true;		
 
+		this.remoteServer.SendRoboStatus(this.managedRobot.GetStatus());
+		
 		if (this.currentState == ManagerState.TravelRoute)
 		{
 			this.remoteServer.SendMapUpdate(this.scannedMap.map);
@@ -304,7 +308,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			
 			this.CancelRoute();
 			
-			if (this.autoScanAlgorithm != null)
+			/*if (this.autoScanAlgorithm != null)
 			{
 				try {
 		            if (this.autoScanAlgorithm.isAlive())
@@ -316,7 +320,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}
+			}*/
+
+			Log("auto cancelled");
 
 			this.managedRobot.SetCollisionCheck(false);
 		}
@@ -570,7 +576,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
         {
 			//this.managedRobot.Stop();
 			
-	    	try {
+        	/*try {
 	            if (this.travelThread.IsRunning())
 	            {
 	            	this.travelThread.CancelRoute();
@@ -580,8 +586,11 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			}*/
+        	this.travelThread.CancelRoute();
         }
+		
+		System.out.println("route cancelled");
 	}
 	
 	private Position ConvertFromAbsoluteToRelative(Point absolutePosition)
@@ -626,6 +635,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 				
 				// The algorithm has to wait until the route is finished.
 				this.travelThread.join();
+				
+				Log("pos reached!");
 			} catch (InterruptedException e) {
 				//e.printStackTrace();
 			}
@@ -656,6 +667,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	@Override
 	public void ScanFinished() {
 		this.AutomaticScanModeExited();
+		
+		this.remoteServer.SendAutoScanFinished();
+		this.remoteServer.SendMapUpdate(this.scannedMap.map);
 	}
 	
 	//

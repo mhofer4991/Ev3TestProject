@@ -13,6 +13,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.freedesktop.DBus.Local.Disconnected;
+
 import Serialize.ControlInput;
 import Serialize.Map;
 import Serialize.RoboStatus;
@@ -54,6 +56,8 @@ public class RemoteControlServer extends Thread {
     public final static byte MSGCODE_ROBOT_EXIT_AUTO_SCAN_MODE = 14;
     
     public final static byte MSGCODE_ROBOT_LOG = 15;
+    
+    public final static byte MSGCODE_AUTO_SCAN_FINISHED = 16;
 	
 	private RemoteControlListener listener;
 	
@@ -162,6 +166,11 @@ public class RemoteControlServer extends Thread {
 	public void SendLog(String text)
 	{
 		this.SendMessage(MSGCODE_ROBOT_LOG, text);
+	}
+	
+	public void SendAutoScanFinished()
+	{
+		this.SendMessage(MSGCODE_AUTO_SCAN_FINISHED, MSGCODE_AUTO_SCAN_FINISHED);
 	}
 	
 	public void SendMessage(byte code, Object msg)

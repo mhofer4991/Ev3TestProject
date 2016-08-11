@@ -30,6 +30,15 @@ import robot.Robot;
 public class Program {
 
 	public static void main(String[] args) throws IOException {
+		Manager mgr = new Manager();
+		mgr.Start();
+		
+		
+		
+		
+		
+		
+		
 		// TODO Auto-generated method stub
 		/*RegulatedMotor rem = new EV3LargeRegulatedMotor(MotorPort.D);
 		RegulatedMotor rem2 = new EV3LargeRegulatedMotor(MotorPort.C);
@@ -109,7 +118,7 @@ public class Program {
 		//drive.(1, false);
 		//drive.TurnRightByDegrees(90, false);
 		
-		Robot ro = new Robot();
+		//Robot ro = new Robot();
 		//CalibratingUtil caliu = new CalibratingUtil(ro.GetDriving());
 		
 		//RemoteControlServer ser = new RemoteControlServer(ro);
@@ -117,8 +126,6 @@ public class Program {
 		//ser.start();
 		
 		//ro.AddListener(ser);
-		Manager mgr = new Manager(ro);
-		mgr.Start();
 		
 		//ro.SetCollisionCheck(true);
 		//ro.DriveDistanceForward(2);
