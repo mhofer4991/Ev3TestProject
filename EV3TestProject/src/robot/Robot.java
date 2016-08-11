@@ -512,6 +512,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 				// Wait for the obstacle to move away.
 				float scannedDistance = 0.0F;
 				boolean rescued = false;
+				obstacleMoved = false;
 				
 				Log("wait for rescue");
 				
@@ -526,6 +527,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 					if (leftDistance < scannedDistance || scannedDistance > CollisionThread.MIN_DISTANCE * 2)
 					{
 						rescued = true;
+						obstacleMoved = true;
 						this.plannedMove = new PlannedMovement(MovementMode.Drive, leftDistance);
 						
 						waitObstacle = false;
