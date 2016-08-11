@@ -14,6 +14,8 @@ import interfaces.IAlgorithmHelper;
 import interfaces.ILogger;
 import interfaces.RemoteControlListener;
 import interfaces.RobotStatusListener;
+import interfaces.TravelListener;
+import lejos.remote.ev3.EV3Request.Request;
 import lejos.robotics.geometry.Point;
 import Serialize.TravelRequest;
 import Serialize.TravelResponse;
@@ -25,7 +27,7 @@ import pathfinding.PathAlgorithm;
 import pathfinding.PathIO;
 import robot.Robot;
 
-public class Manager implements RemoteControlListener, RobotStatusListener, IAlgorithmHelper, ILogger {
+public class Manager implements RemoteControlListener, RobotStatusListener, IAlgorithmHelper, ILogger, TravelListener {
 	private Robot managedRobot;
 	
 	private ScanMap scannedMap;
@@ -40,6 +42,12 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	private TravelThread travelThread;
 	
 	private TravelRequest travelRequest;
+	
+	// Save response also for reconnections
+	private TravelResponse travelResponse;
+	
+	// Save the index of the next point of the requested travel route, which has to be reached.
+	private int travelIndex;
 	
 	// Remote
 	
@@ -88,11 +96,6 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void RobotStatusUpdated(RoboStatus status) {
-		if (this.isConnectedToRemote)
-		{
-			this.remoteServer.SendRoboStatus(managedRobot.GetStatus());
-		}
-		
 		if (this.currentState == ManagerState.ManualScan)
 		{
 			// In manual mode we track each position change 
@@ -125,11 +128,19 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			}
 		}
 		
+		if (this.isConnectedToRemote)
+		{
+			this.remoteServer.SendRoboStatus(managedRobot.GetStatus());
+		}
+		
 		this.lastRobotPosition = new Point(status.X, status.Y);
 	}
 
 	@Override
-	public void RobotStoppedDueToObstacle(RoboStatus status) {
+	public void RobotStoppedDueToObstacle(RoboStatus status, Point obstaclePosition) {
+		Position relObstaclePos = this.ConvertFromAbsoluteToRelative(obstaclePosition);
+		Position relRobotPos = this.ConvertFromAbsoluteToRelative(new Point(status.X, status.Y));
+		
 		if (this.currentState == ManagerState.AutoScan)
 		{				
 			this.AutomaticScanModeExited();
@@ -137,9 +148,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			//Position pos = new Position((int)(Math.round(status.X / cellStep)), (int)(Math.round(status.Y / cellStep)));
 			//Position arrPos = scannedMap.map.GetIndex(pos.Get_X(), pos.Get_Y());
 			//this.scannedMap.map.Get_Fields()[arrPos.Get_X()][arrPos.Get_Y()].Set_State(Fieldstate.occupied);
-			Position pos = this.ConvertFromAbsoluteToRelative(new Point(status.X, status.Y));
 			
-			this.scannedMap.map.GetFieldByRelativePosition(pos).Set_State(Fieldstate.occupied);
+			//this.scannedMap.map.GetFieldByRelativePosition(relRobotPos).Set_State(Fieldstate.occupied);
+			this.scannedMap.map.GetFieldByRelativePosition(relObstaclePos).Set_State(Fieldstate.occupied);
 			
 			this.remoteServer.SendMapUpdate(scannedMap.map);
 			
@@ -150,6 +161,54 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			
 			this.AutomaticScanModeStarted();
 		}
+		else if (this.currentState == ManagerState.TravelRoute)
+		{
+			Log("obstacle while travel");
+			
+			this.CancelRoute();
+			
+			// Update scan map
+			this.scannedMap.map.GetFieldByRelativePosition(relObstaclePos).Set_State(Fieldstate.occupied);
+			
+			this.remoteServer.SendMapUpdate(scannedMap.map);
+
+			this.managedRobot.DriveDistanceBackward(0.5F);
+			
+			// Create new travel request from current travel request
+			if (travelRequest != null)
+			{
+				List<Position> newRoute = new ArrayList<Position>();
+				
+				newRoute.add(relRobotPos);
+				
+				// add remaining route points
+				for (int i = travelIndex; i < travelRequest.TravelledRoute.Get_Route().size(); i++)
+				{
+					Position pos = travelRequest.TravelledRoute.Get_Route().get(i);
+					
+					if (newRoute.get(newRoute.size() - 1).Get_X() != pos.Get_X() ||
+						newRoute.get(newRoute.size() - 1).Get_Y() != pos.Get_Y())
+					{
+						newRoute.add(travelRequest.TravelledRoute.Get_Route().get(i));
+					}
+				}
+				
+				for (int i = 0; i < travelIndex; i++)
+				{
+					Position pos = travelRequest.TravelledRoute.Get_Route().get(i);
+					
+					if (newRoute.get(newRoute.size() - 1).Get_X() != pos.Get_X() ||
+						newRoute.get(newRoute.size() - 1).Get_Y() != pos.Get_Y())
+					{
+						newRoute.add(travelRequest.TravelledRoute.Get_Route().get(i));
+					}
+				}
+				
+				TravelRequest newRequest = new TravelRequest(travelRequest.ID, scannedMap.map, new Route(newRoute));
+				
+				this.TravelRouteRequested(newRequest);
+			}
+		}
 	}
 	
 	//
@@ -158,7 +217,25 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 
 	@Override
 	public void ConnectedToRemote() {
-		this.isConnectedToRemote = true;
+		this.isConnectedToRemote = true;		
+
+		if (this.currentState == ManagerState.TravelRoute)
+		{
+			this.remoteServer.SendMapUpdate(this.scannedMap.map);
+			
+			if (this.travelResponse != null)
+			{
+				this.remoteServer.SendTravelResponse(this.travelResponse);
+			}
+		}
+		else if (this.currentState == ManagerState.AutoScan)
+		{
+			this.remoteServer.SendMapUpdate(this.scannedMap.map);
+		}
+		else if (this.currentState == ManagerState.ManualScan)
+		{
+			this.remoteServer.SendMapUpdate(this.scannedMap.map);
+		}
 	}
 
 	@Override
@@ -366,6 +443,43 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	}
 
 	@Override
+	public void MapRequested() {
+		this.remoteServer.SendMapResponse(this.scannedMap.map);
+	}
+	
+	//
+	// Travelling
+	//
+	
+	/**
+	 * Use this method if you want to add extended functionality for some route points
+	 * Route = route sent from gui
+	 */
+	@Override
+	public void TravelPartReached(Point position) {
+		if (this.currentState == ManagerState.TravelRoute)
+		{
+			if (travelRequest != null)
+			{
+				Position relPos = this.ConvertFromAbsoluteToRelative(managedRobot.GetPosition());
+				Position expected = travelRequest.TravelledRoute.Get_Route().get(travelIndex);
+				
+				if (expected.Get_X() == relPos.Get_X() && expected.Get_Y() == relPos.Get_Y())
+				{
+					Log("Travel part reached");
+					
+					travelIndex++;
+					
+					if (travelIndex >= travelRequest.TravelledRoute.Get_Route().size())
+					{
+						travelIndex = 0;
+					}
+				}
+			}
+		}
+	}
+
+	@Override
 	public void TravelRouteRequested(Serialize.TravelRequest request) {
 		// Abort if we are not in idle or travel mode, because this means
 		// that the user wants to scan the map.
@@ -375,9 +489,6 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			
 			return;
 		}
-		
-		// Switch to travel mode
-		this.currentState = ManagerState.TravelRoute;
 		
 		System.out.println(request.TravelledRoute.Get_Route().size());
 		System.out.println("> " + request.TravelledMap.Get_Fields()[1][1].Get_State().ordinal());
@@ -398,27 +509,19 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
         	this.remoteServer.SendTravelResponse(new TravelResponse(request.ID, false, new Route(convertedToRelative)));
         }
         else
-        {
-        	/*
-            // Convert relative coordinates to absolute coordinates (1 -> 50cm for example)
-            List<Point> convertedToAbsolute = new ArrayList<Point>();
-            
-            for (Position pos : convertedToRelative)
-            {
-            	Point n = new Point((float)pos.Get_X() * cellStep, (float)pos.Get_Y() * cellStep);
-            	
-            	convertedToAbsolute.add(n);
-            }
-
-            this.CancelRoute();
-            
-            this.travelThread = new TravelThread(this.managedRobot, convertedToAbsolute);
-            this.travelThread.start();*/
+        {    		
+    		// Switch to travel mode
+    		this.currentState = ManagerState.TravelRoute;
         	this.travelRequest = request;
+        	this.travelIndex = 0;
+        	this.scannedMap = new ScanMap();
+        	this.scannedMap.map = request.TravelledMap;
+        	this.managedRobot.SetCollisionCheck(true);
+        	this.travelResponse = new TravelResponse(request.ID, true, new Route(convertedToRelative));
         	
         	this.StartRoute(new Route(convertedToRelative), true);
             
-            this.remoteServer.SendTravelResponse(new TravelResponse(request.ID, true, new Route(convertedToRelative)));
+            this.remoteServer.SendTravelResponse(travelResponse);
         }
 	}
 
@@ -427,6 +530,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		if (this.currentState == ManagerState.TravelRoute)
 		{
 			this.CancelRoute();
+        	this.managedRobot.SetCollisionCheck(false);
+			
+			this.currentState = ManagerState.Idle;
 		}
 	}
 	
@@ -454,6 +560,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
         this.CancelRoute();
         
         this.travelThread = new TravelThread(this.managedRobot, convertedToAbsolute, repeat);
+        this.travelThread.AddListener(this);
         this.travelThread.start();
 	}
 	
@@ -503,6 +610,11 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 		{
 			this.managedRobot.RotateToDegrees(degrees);
 		}
+	}
+
+	@Override
+	public float GetRobotRotation() {
+		return this.managedRobot.GetRotation();
 	}
 
 	@Override

@@ -99,6 +99,7 @@ public class CollisionThread extends Thread {
 				// analyse gyro sensor
 				gyro.getAngleMode().fetchSample(gyroData, 0);
 				
+				// check rotation change each 500 milliseconds (50 * 10)
 				if (updates % 10 == 0)
 				{
 					if (Math.abs(lastRotation - gyroData[0]) >= MAX_ROTATION_CHANGE)

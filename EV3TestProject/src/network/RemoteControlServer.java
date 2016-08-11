@@ -29,6 +29,10 @@ public class RemoteControlServer extends Thread {
 	
 	public final static byte MSGCODE_REMOTE_CONTROL_INPUT = 1;
 	
+	public final static byte MSGCODE_ROBOT_MAP_REQUEST = 2;
+	
+	public final static byte MSGCODE_ROBOT_MAP_RESPONSE = 3;
+	
 	public final static byte MSGCODE_ROBOT_STATUS_UPDATE = 5;
 	
 	public final static byte MSGCODE_ROBOT_CALIBRATE_REQUEST = 6;
@@ -134,6 +138,11 @@ public class RemoteControlServer extends Thread {
 	//
 	// Send methods
 	//
+	
+	public void SendMapResponse(Map map)
+	{
+		this.SendMessage(MSGCODE_ROBOT_MAP_RESPONSE, map);
+	}
 	
 	public void SendRoboStatus(RoboStatus status)
 	{
@@ -263,6 +272,10 @@ public class RemoteControlServer extends Thread {
 				//System.out.println(in.Code);
 				this.HandleControlInput(in);
 			}
+		}
+		else if (code == MSGCODE_ROBOT_MAP_REQUEST)
+		{
+			this.listener.MapRequested();
 		}
 		else if (code == MSGCODE_ROBOT_CALIBRATE_REQUEST)
 		{

@@ -19,6 +19,7 @@ public interface RemoteControlListener {
 	void CalibratingRequested();
 	void TravelRouteRequested(TravelRequest request);
 	void CancelRouteRequested();
+	void MapRequested();
 	
 	// Remote controlling the robot
 	void DriveRobotForward();

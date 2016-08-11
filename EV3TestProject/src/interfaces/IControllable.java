@@ -21,6 +21,7 @@ public interface IControllable {
 	boolean IsMoving();
 	void RotateToDegrees(float degrees);
 	Point GetPosition();
+	float GetRotation();
 	// Returning the distance is just a temporary solution
 	//float DriveToPosition(Point position);
 	float ScanDistance();

@@ -1,9 +1,11 @@
 package robo2016;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import Serialize.Position;
 import interfaces.IControllable;
+import interfaces.TravelListener;
 import lejos.robotics.geometry.Point;
 
 public class TravelThread extends Thread {
@@ -17,6 +19,8 @@ public class TravelThread extends Thread {
 	
 	private Point currentDestination;
 	
+	private List<TravelListener> listeners;
+	
 	public TravelThread(IControllable controllable, List<Point> route, boolean repeat)
 	{
 		this.controllable = controllable;
@@ -25,6 +29,7 @@ public class TravelThread extends Thread {
 		
 		this.running = false;
 		this.currentDestination = null;
+		this.listeners = new ArrayList<TravelListener>();
 	}
 	
 	public void CancelRoute()
@@ -41,6 +46,11 @@ public class TravelThread extends Thread {
 	public Point GetCurrentDestination()
 	{
 		return this.currentDestination;
+	}
+	
+	public void AddListener(TravelListener listener)
+	{
+		this.listeners.add(listener);
 	}
 	
 	@Override
@@ -67,14 +77,24 @@ public class TravelThread extends Thread {
 						angle *= -1.0F;
 					}
 
+					// It could always happen that the route is suddenly cancelled
+					// inside the while loop.
 					if (this.running)
 					{
 						this.controllable.RotateToDegrees(angle);	
-					}
-					
-					if (this.running)
-					{
-						this.controllable.DriveDistanceForward(h);
+						
+						if (this.running)
+						{
+							this.controllable.DriveDistanceForward(h);
+							
+							if (this.running)
+							{
+								for (TravelListener listener : listeners)
+								{
+									listener.TravelPartReached(currentDestination);
+								}
+							}
+						}
 					}
 					
 	            	/*float d = this.controllable.DriveToPosition(pos);
