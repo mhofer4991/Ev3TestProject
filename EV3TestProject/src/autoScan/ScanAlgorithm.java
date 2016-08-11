@@ -84,7 +84,7 @@ public class ScanAlgorithm extends Thread {
 				int freeDistance = roboInfo.MeasureDistance();
 				
 				// Scanergebnis einbinden
-				this.scanMap.AddScanResult(direction, freeDistance, roboPosition, Fieldstate.free);
+				this.scanMap.AddScanResult(roboInfo.GetRobotRotation(), freeDistance, roboPosition, Fieldstate.free);
 				
 				// Manager benachrichtigen
 				roboInfo.UpdateScanMap(this.scanMap);
