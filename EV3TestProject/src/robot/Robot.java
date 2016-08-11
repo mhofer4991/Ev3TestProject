@@ -56,6 +56,8 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	
 	private boolean waitObstacle;
 	
+	private boolean obstacleMoved;
+	
 	// listeners
 	private List<RobotStatusListener> listeners;
 	
@@ -156,7 +158,6 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 
 	@Override
 	public synchronized void DriveDistanceForward(float distance) {
-		this.waitObstacle = false;
 		this.currentMovement = MovementMode.Drive;
 		Log("drive forward: " + distance);
 		
@@ -168,8 +169,17 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		// we have to wait for an obstacle to move away
 		while (waitObstacle)
 		{
-			this.driving.GetLeft().waitComplete();
-			this.driving.GetRight().waitComplete();
+			//this.driving.GetLeft().waitComplete();
+			//this.driving.GetRight().waitComplete();
+			Delay.msDelay(1000);
+		}
+		
+		if (obstacleMoved)
+		{
+			if (this.plannedMove != null)
+			{
+				this.DriveDistanceForward(plannedMove.Value);
+			}
 		}
 	}
 
@@ -515,6 +525,11 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 					
 					if (leftDistance < scannedDistance || scannedDistance > CollisionThread.MIN_DISTANCE * 2)
 					{
+						rescued = true;
+						this.plannedMove = new PlannedMovement(MovementMode.Drive, leftDistance);
+						
+						waitObstacle = false;
+						/*
 						// TODO:
 						// Better solution?
 						rescued = true;
@@ -525,7 +540,7 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 						
 						// True = do not wait for finish, because it would
 						// block the collision watch thread.
-						this.driving.DriveDistanceForward(leftDistance, true);
+						this.driving.DriveDistanceForward(leftDistance, true);*/
 					}
 				}
 				
