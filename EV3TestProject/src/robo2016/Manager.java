@@ -186,7 +186,7 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			if (d >= 0.5F)
 			{
 				escapeFound = true;
-				this.managedRobot.DriveDistanceForward(d);
+				this.managedRobot.DriveDistanceForward(0.5F);
 			}
 		}
 
