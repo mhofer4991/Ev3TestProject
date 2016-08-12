@@ -154,9 +154,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			//this.scannedMap.map.GetFieldByRelativePosition(relRobotPos).Set_State(Fieldstate.occupied);
 			//this.scannedMap.map.GetFieldByRelativePosition(relObstaclePos).Set_State(Fieldstate.occupied);
 			
-			Log("prepare to restart auto mode");
+			//Log("prepare to restart auto mode");
 			
-			this.AutomaticScanModeStarted();
+			//this.AutomaticScanModeStarted();
 		}
 		else if (state == ManagerState.TravelRoute)
 		{
