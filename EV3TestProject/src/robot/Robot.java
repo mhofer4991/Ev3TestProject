@@ -161,6 +161,10 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 	{
 		return this.position;
 	}
+	
+	//
+	// Synchronized methods
+	//
 
 	@Override
 	public synchronized void DriveDistanceForward(float distance) {
@@ -171,20 +175,25 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		
 		this.driving.DriveDistanceForward(distance, false);
 		
-		// If driving forward, it could happen that
-		// we have to wait for an obstacle to move away
-		while (awaitsObstacle)
+		if (awaitsObstacle)
 		{
-			//this.driving.GetLeft().waitComplete();
-			//this.driving.GetRight().waitComplete();
-			Delay.msDelay(1000);
-		}
-		
-		if (obstacleMoved)
-		{
-			if (this.plannedMove != null)
+			// If driving forward, it could happen that
+			// we have to wait for an obstacle to move away
+			while (awaitsObstacle)
 			{
-				this.DriveDistanceForward(plannedMove.Value);
+				//this.driving.GetLeft().waitComplete();
+				//this.driving.GetRight().waitComplete();
+				Delay.msDelay(1000);
+			}
+			
+			if (obstacleMoved)
+			{
+				if (this.plannedMove != null)
+				{
+					obstacleMoved = false;
+					
+					this.DriveDistanceForward(plannedMove.Value);
+				}
 			}
 		}
 	}
@@ -289,6 +298,10 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 		
 		this.TurnLeftByDegrees(diff);
 	}
+	
+	//
+	// End of synchronized methods
+	//
 
 	@Override
 	public void DriveForward() {
@@ -596,7 +609,8 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 			this.Stop();
 			
 			// rotate back			
-			this.DriveDistanceBackward(0.15F);
+			//this.DriveDistanceBackward(0.15F);
+			this.driving.DriveDistanceBackward(0.15F, false);
 			
 			float[] data = new float[1];
 			
@@ -616,12 +630,14 @@ public class Robot implements IControllable, RegulatedMotorListener, CollisionLi
 			if (data[0] > lastRotation)
 			{
 				// robot turned right. correct it by turning left
-				this.TurnLeftByDegrees(Math.abs(diff));
+				//this.TurnLeftByDegrees(Math.abs(diff));
+				this.driving.TurnLeftByDegrees(Math.abs(diff), false);
 			}
 			else
 			{
 				// robot turned left. correct it by turning right
-				this.TurnRightByDegrees(Math.abs(diff));
+				//this.TurnRightByDegrees(Math.abs(diff));
+				this.driving.TurnRightByDegrees(Math.abs(diff), false);
 			}
 			
 			this.NotifyStopEvent();

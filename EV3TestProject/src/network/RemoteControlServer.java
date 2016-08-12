@@ -35,6 +35,8 @@ public class RemoteControlServer extends Thread {
 	
 	public final static byte MSGCODE_ROBOT_MAP_RESPONSE = 3;
 	
+	public final static byte MSGCODE_ROBOT_CALIBRATE_FINISHED = 4;
+	
 	public final static byte MSGCODE_ROBOT_STATUS_UPDATE = 5;
 	
 	public final static byte MSGCODE_ROBOT_CALIBRATE_REQUEST = 6;
@@ -142,6 +144,11 @@ public class RemoteControlServer extends Thread {
 	//
 	// Send methods
 	//
+	
+	public void SendCalibrationFinished()
+	{
+		this.SendMessage(MSGCODE_ROBOT_CALIBRATE_FINISHED, MSGCODE_ROBOT_CALIBRATE_FINISHED);
+	}
 	
 	public void SendMapResponse(Map map)
 	{

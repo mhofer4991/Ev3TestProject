@@ -140,8 +140,9 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	public void RobotStoppedDueToObstacle(RoboStatus status, Point obstaclePosition) {
 		Position relObstaclePos = this.ConvertFromAbsoluteToRelative(obstaclePosition);
 		Position relRobotPos = this.ConvertFromAbsoluteToRelative(new Point(status.X, status.Y));
+		ManagerState state = this.currentState;
 		
-		if (this.currentState == ManagerState.AutoScan)
+		if (state == ManagerState.AutoScan)
 		{				
 			this.AutomaticScanModeExited();
 			this.managedRobot.ObstacleGone();
@@ -152,32 +153,124 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 			
 			//this.scannedMap.map.GetFieldByRelativePosition(relRobotPos).Set_State(Fieldstate.occupied);
 			//this.scannedMap.map.GetFieldByRelativePosition(relObstaclePos).Set_State(Fieldstate.occupied);
-			this.scannedMap.AddScanResult(relObstaclePos, relObstaclePos, Fieldstate.occupied);
-			
-			this.remoteServer.SendMapUpdate(scannedMap.map);
-			
-			// Better: drive to another position
-			this.managedRobot.DriveDistanceBackward(0.5F);
 			
 			Log("prepare to restart auto mode");
 			
 			this.AutomaticScanModeStarted();
 		}
-		else if (this.currentState == ManagerState.TravelRoute)
+		else if (state == ManagerState.TravelRoute)
 		{
 			Log("obstacle while travel");
 
 			this.CancelRouteRequested();
 			this.managedRobot.ObstacleGone();
-			
-			// Update scan map
-			//this.scannedMap.map.GetFieldByRelativePosition(relObstaclePos).Set_State(Fieldstate.occupied);
-			this.scannedMap.AddScanResult(relObstaclePos, relObstaclePos, Fieldstate.occupied);
-			
-			this.remoteServer.SendMapUpdate(scannedMap.map);
+		}
 
-			this.managedRobot.DriveDistanceBackward(0.5F);
+		// how to make sure that the robot is not in the same cell as the obstacle????
+		// solution #1
+		// drive 0.5 meter backward
+		// Better: drive to another position
+		//this.managedRobot.DriveDistanceBackward(0.5F);
+		
+		// solution #2
+		// look for best rotation to escape
+		this.managedRobot.DriveDistanceBackward(0.1F);
+		boolean escapeFound = false;
+		
+		for (int i = 1; i <= 3 && !escapeFound; i++)
+		{
+			//this.managedRobot.RotateToDegrees(i * 90);
+			this.managedRobot.TurnRightByDegrees(i * 90.0F);
+			float d = this.managedRobot.ScanDistance();
 			
+			if (d >= 0.5F)
+			{
+				escapeFound = true;
+				this.managedRobot.DriveDistanceForward(d);
+			}
+		}
+
+		// solution #3
+		// Drive to free point
+		/*List<Position> routeBack = new ArrayList<Position>();
+		routeBack.add(relRobotPos);
+		
+		// if the robot has the same position as the obstacle,
+		// move to the nearest free cell.
+		if (relObstaclePos.Get_X() == relRobotPos.Get_X() && relObstaclePos.Get_Y() == relRobotPos.Get_Y())
+		{
+			Position arrPos = this.scannedMap.map.GetIndex(relRobotPos.Get_X(), relRobotPos.Get_Y());
+			int x = arrPos.Get_X();
+			int y = arrPos.Get_Y();
+			List<Position> possible = new ArrayList<Position>();
+			
+			if (x - 1 >= 0)
+			{
+				Field f = this.scannedMap.map.Get_Fields()[x - 1][y];
+				
+				if (f.Get_State() == Fieldstate.free || f.Get_State() == Fieldstate.freeScanned)
+				{
+					possible.add(f.Get_Position());
+				}
+			}
+			else if (x + 1 < this.scannedMap.map.Get_Fields().length)
+			{
+				Field f = this.scannedMap.map.Get_Fields()[x + 1][y];
+				
+				if (f.Get_State() == Fieldstate.free || f.Get_State() == Fieldstate.freeScanned)
+				{
+					possible.add(f.Get_Position());
+				}
+			}
+			else if (y - 1 >= 0)
+			{
+				Field f = this.scannedMap.map.Get_Fields()[x][y - 1];
+				
+				if (f.Get_State() == Fieldstate.free || f.Get_State() == Fieldstate.freeScanned)
+				{
+					possible.add(f.Get_Position());
+				}
+			}
+			else if (y + 1 < this.scannedMap.map.Get_Fields()[0].length)
+			{
+				Field f = this.scannedMap.map.Get_Fields()[x][y + 1];
+				
+				if (f.Get_State() == Fieldstate.free || f.Get_State() == Fieldstate.freeScanned)
+				{
+					possible.add(f.Get_Position());
+				}
+			}
+			
+			if (possible.size() > 0)
+			{
+				routeBack.add(possible.get(0));
+			}
+		}
+
+		try {
+			this.StartRoute(new Route(routeBack), false);
+			this.travelThread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}*/
+		
+		// Update scan map
+		//this.scannedMap.map.GetFieldByRelativePosition(relObstaclePos).Set_State(Fieldstate.occupied);
+		this.scannedMap.AddScanResult(relObstaclePos, relObstaclePos, Fieldstate.occupied);
+		
+		this.remoteServer.SendMapUpdate(scannedMap.map);
+		
+		
+		
+		
+		if (state == ManagerState.AutoScan)
+		{
+			Log("prepare to restart auto mode");
+			
+			this.AutomaticScanModeStarted();
+		}
+		else if (state == ManagerState.TravelRoute)
+		{			
 			// Create new travel request from current travel request
 			if (travelRequest != null)
 			{
@@ -340,6 +433,8 @@ public class Manager implements RemoteControlListener, RobotStatusListener, IAlg
 	@Override
 	public void CalibratingRequested() {
 		this.managedRobot.Calibrate(1000);
+		
+		this.remoteServer.SendCalibrationFinished();
 	}
 
 	@Override
